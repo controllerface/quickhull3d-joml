@@ -462,6 +462,32 @@ public class QuickHull3D
         buildHull();
     }
 
+    public void build(float[] coords) throws IllegalArgumentException
+    {
+        build(coords, coords.length / 3);
+    }
+
+    public void build(float[] coords, int nump) throws IllegalArgumentException
+    {
+        if (nump < 4)
+        {
+            throw new IllegalArgumentException("Less than four input points specified");
+        }
+        if (coords.length / 3 < nump)
+        {
+            throw new IllegalArgumentException("Coordinate array too small for specified number of points");
+        }
+        initBuffers(nump);
+        double[] double_buffer = new double[coords.length];
+        for (int i = 0; i < coords.length; i++)
+        {
+            double_buffer[i] = coords[i];
+        }
+        setPoints(double_buffer, nump);
+        buildHull();
+    }
+
+
     /**
      * Constructs the convex hull of a set of points.
      *
