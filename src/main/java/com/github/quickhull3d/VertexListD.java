@@ -32,11 +32,11 @@ package com.github.quickhull3d;
 /**
  * Maintains a double-linked list of vertices for use by QuickHull3D
  */
-class VertexList {
+class VertexListD {
 
-    private Vertex head;
+    private VertexD head;
 
-    private Vertex tail;
+    private VertexD tail;
 
     /**
      * Clears this list.
@@ -48,7 +48,7 @@ class VertexList {
     /**
      * Adds a vertex to the end of this list.
      */
-    public void add(Vertex vtx) {
+    public void add(VertexD vtx) {
         if (head == null) {
             head = vtx;
         } else {
@@ -62,7 +62,7 @@ class VertexList {
     /**
      * Adds a chain of vertices to the end of this list.
      */
-    public void addAll(Vertex vtx) {
+    public void addAll(VertexD vtx) {
         if (head == null) {
             head = vtx;
         } else {
@@ -78,7 +78,7 @@ class VertexList {
     /**
      * Deletes a vertex from this list.
      */
-    public void delete(Vertex vtx) {
+    public void delete(VertexD vtx) {
         if (vtx.prev == null) {
             head = vtx.next;
         } else {
@@ -94,7 +94,7 @@ class VertexList {
     /**
      * Deletes a chain of vertices from this list.
      */
-    public void delete(Vertex vtx1, Vertex vtx2) {
+    public void delete(VertexD vtx1, VertexD vtx2) {
         if (vtx1.prev == null) {
             head = vtx2.next;
         } else {
@@ -110,7 +110,7 @@ class VertexList {
     /**
      * Inserts a vertex into this list before another specificed vertex.
      */
-    public void insertBefore(Vertex vtx, Vertex next) {
+    public void insertBefore(VertexD vtx, VertexD next) {
         vtx.prev = next.prev;
         if (next.prev == null) {
             head = vtx;
@@ -124,7 +124,7 @@ class VertexList {
     /**
      * Returns the first element in this list.
      */
-    public Vertex first() {
+    public VertexD first() {
         return head;
     }
 

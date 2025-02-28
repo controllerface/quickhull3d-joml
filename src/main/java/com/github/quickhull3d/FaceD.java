@@ -29,6 +29,8 @@ package com.github.quickhull3d;
  * #L%
  */
 
+import org.joml.Vector3d;
+
 /**
  * Basic triangular face used to form the hull.
  * <p>
@@ -38,8 +40,7 @@ package com.github.quickhull3d;
  * 
  * @author John E. Lloyd, Fall 2004
  */
-class Face {
-
+class FaceD {
     protected static final int DELETED = 3;
 
     protected static final int NON_CONVEX = 2;
@@ -48,42 +49,47 @@ class Face {
 
     protected double area;
 
-    protected HalfEdge he0;
+    protected HalfEdgeD he0;
 
-    protected int mark = VISIBLE;
+    protected int mark;
 
-    protected Face next;
+    protected FaceD next;
 
     protected int numVerts;
 
-    protected Vertex outside;
+    protected VertexD outside;
 
     protected double planeOffset;
 
-    private Point3d centroid;
+    private final Vector3d centroid;
 
-    private Vector3d normal;
+    private final Vector3d normal;
 
-    public Face() {
+    public FaceD() {
         normal = new Vector3d();
-        centroid = new Point3d();
+        centroid = new Vector3d();
         mark = VISIBLE;
     }
 
-    public static Face create(Vertex[] vtxArray, int[] indices) {
-        Face face = new Face();
-        HalfEdge hePrev = null;
-        for (int i = 0; i < indices.length; i++) {
-            HalfEdge he = new HalfEdge(vtxArray[indices[i]], face);
-            if (hePrev != null) {
+    public static FaceD create(VertexD[] vtxArray, int[] indices) {
+        FaceD face = new FaceD();
+        HalfEdgeD hePrev = null;
+        for (int index : indices)
+        {
+            HalfEdgeD he = new HalfEdgeD(vtxArray[index], face);
+            if (hePrev != null)
+            {
                 he.setPrev(hePrev);
                 hePrev.setNext(he);
-            } else {
+            }
+            else
+            {
                 face.he0 = he;
             }
             hePrev = he;
         }
         face.he0.setPrev(hePrev);
+        assert hePrev != null;
         hePrev.setNext(face.he0);
 
         // compute the normal and offset
@@ -91,12 +97,12 @@ class Face {
         return face;
     }
 
-    public static Face createTriangle(Vertex v0, Vertex v1, Vertex v2) {
+    public static FaceD createTriangle(VertexD v0, VertexD v1, VertexD v2) {
         return createTriangle(v0, v1, v2, 0);
     }
 
     /**
-     * Constructs a triangule Face from vertices v0, v1, and v2.
+     * Constructs a triangle Face from vertices v0, v1, and v2.
      * 
      * @param v0
      *            first vertex
@@ -105,11 +111,11 @@ class Face {
      * @param v2
      *            third vertex
      */
-    public static Face createTriangle(Vertex v0, Vertex v1, Vertex v2, double minArea) {
-        Face face = new Face();
-        HalfEdge he0 = new HalfEdge(v0, face);
-        HalfEdge he1 = new HalfEdge(v1, face);
-        HalfEdge he2 = new HalfEdge(v2, face);
+    public static FaceD createTriangle(VertexD v0, VertexD v1, VertexD v2, double minArea) {
+        FaceD face = new FaceD();
+        HalfEdgeD he0 = new HalfEdgeD(v0, face);
+        HalfEdgeD he1 = new HalfEdgeD(v1, face);
+        HalfEdgeD he2 = new HalfEdgeD(v2, face);
 
         he0.prev = he2;
         he0.next = he1;
@@ -125,28 +131,28 @@ class Face {
         return face;
     }
 
-    public void computeCentroid(Point3d centroid) {
-        centroid.setZero();
-        HalfEdge he = he0;
+    public void computeCentroid(Vector3d centroid) {
+        centroid.set(0);
+        HalfEdgeD he = he0;
         do {
             centroid.add(he.head().pnt);
             he = he.next;
         } while (he != he0);
-        centroid.scale(1 / (double) numVerts);
+        centroid.mul(1 / (double) numVerts);
     }
 
     public void computeNormal(Vector3d normal) {
-        HalfEdge he1 = he0.next;
-        HalfEdge he2 = he1.next;
+        HalfEdgeD he1 = he0.next;
+        HalfEdgeD he2 = he1.next;
 
-        Point3d p0 = he0.head().pnt;
-        Point3d p2 = he1.head().pnt;
+        Vector3d p0 = he0.head().pnt;
+        Vector3d p2 = he1.head().pnt;
 
         double d2x = p2.x - p0.x;
         double d2y = p2.y - p0.y;
         double d2z = p2.z - p0.z;
 
-        normal.setZero();
+        normal.set(0);
 
         numVerts = 2;
 
@@ -164,12 +170,11 @@ class Face {
             normal.y += d1z * d2x - d1x * d2z;
             normal.z += d1x * d2y - d1y * d2x;
 
-            he1 = he2;
             he2 = he2.next;
             numVerts++;
         }
-        area = normal.norm();
-        normal.scale(1 / area);
+        area = norm(normal);
+        normal.mul(1 / area);
     }
 
     public void computeNormal(Vector3d normal, double minArea) {
@@ -179,9 +184,9 @@ class Face {
             // make the normal more robust by removing
             // components parallel to the longest edge
 
-            HalfEdge hedgeMax = null;
+            HalfEdgeD hedgeMax = null;
             double lenSqrMax = 0;
-            HalfEdge hedge = he0;
+            HalfEdgeD hedge = he0;
             do {
                 double lenSqr = hedge.lengthSquared();
                 if (lenSqr > lenSqrMax) {
@@ -191,8 +196,9 @@ class Face {
                 hedge = hedge.next;
             } while (hedge != he0);
 
-            Point3d p2 = hedgeMax.head().pnt;
-            Point3d p1 = hedgeMax.tail().pnt;
+            assert hedgeMax != null;
+            Vector3d p2 = hedgeMax.head().pnt;
+            Vector3d p1 = hedgeMax.tail().pnt;
             double lenMax = Math.sqrt(lenSqrMax);
             double ux = (p2.x - p1.x) / lenMax;
             double uy = (p2.y - p1.y) / lenMax;
@@ -213,7 +219,7 @@ class Face {
      *            the point
      * @return distance from the point to the plane
      */
-    public double distanceToPlane(Point3d p) {
+    public double distanceToPlane(Vector3d p) {
         return normal.x * p.x + normal.y * p.y + normal.z * p.z - planeOffset;
     }
 
@@ -227,8 +233,8 @@ class Face {
      *            head point
      * @return the half-edge, or null if none is found.
      */
-    public HalfEdge findEdge(Vertex vt, Vertex vh) {
-        HalfEdge he = he0;
+    public HalfEdgeD findEdge(VertexD vt, VertexD vh) {
+        HalfEdgeD he = he0;
         do {
             if (he.head() == vh && he.tail() == vt) {
                 return he;
@@ -238,7 +244,7 @@ class Face {
         return null;
     }
 
-    public Point3d getCentroid() {
+    public Vector3d getCentroid() {
         return centroid;
     }
 
@@ -249,8 +255,8 @@ class Face {
      *            the half-edge index, in the range 0-2.
      * @return the half-edge
      */
-    public HalfEdge getEdge(int i) {
-        HalfEdge he = he0;
+    public HalfEdgeD getEdge(int i) {
+        HalfEdgeD he = he0;
         while (i > 0) {
             he = he.next;
             i--;
@@ -262,55 +268,37 @@ class Face {
         return he;
     }
 
-    public HalfEdge getFirstEdge() {
+    public HalfEdgeD getFirstEdge() {
         return he0;
     }
 
-    /**
-     * Returns the normal of the plane associated with this face.
-     * 
-     * @return the planar normal
-     */
-    public Vector3d getNormal() {
-        return normal;
-    }
-
-    public void getVertexIndices(int[] idxs) {
-        HalfEdge he = he0;
-        int i = 0;
-        do {
-            idxs[i++] = he.head().index;
-            he = he.next;
-        } while (he != he0);
-    }
-
     public String getVertexString() {
-        String s = null;
-        HalfEdge he = he0;
+        StringBuilder s = null;
+        HalfEdgeD he = he0;
         do {
             if (s == null) {
-                s = "" + he.head().index;
+                s = new StringBuilder("" + he.head().index);
             } else {
-                s += " " + he.head().index;
+                s.append(" ").append(he.head().index);
             }
             he = he.next;
         } while (he != he0);
-        return s;
+        return s.toString();
     }
 
-    public int mergeAdjacentFace(HalfEdge hedgeAdj, Face[] discarded) {
-        Face oppFace = hedgeAdj.oppositeFace();
+    public int mergeAdjacentFace(HalfEdgeD hedgeAdj, FaceD[] discarded) {
+        FaceD oppFace = hedgeAdj.oppositeFace();
         int numDiscarded = 0;
 
         discarded[numDiscarded++] = oppFace;
         oppFace.mark = DELETED;
 
-        HalfEdge hedgeOpp = hedgeAdj.getOpposite();
+        HalfEdgeD hedgeOpp = hedgeAdj.getOpposite();
 
-        HalfEdge hedgeAdjPrev = hedgeAdj.prev;
-        HalfEdge hedgeAdjNext = hedgeAdj.next;
-        HalfEdge hedgeOppPrev = hedgeOpp.prev;
-        HalfEdge hedgeOppNext = hedgeOpp.next;
+        HalfEdgeD hedgeAdjPrev = hedgeAdj.prev;
+        HalfEdgeD hedgeAdjNext = hedgeAdj.next;
+        HalfEdgeD hedgeOppPrev = hedgeOpp.prev;
+        HalfEdgeD hedgeOppNext = hedgeOpp.next;
 
         while (hedgeAdjPrev.oppositeFace() == oppFace) {
             hedgeAdjPrev = hedgeAdjPrev.prev;
@@ -322,7 +310,7 @@ class Face {
             hedgeAdjNext = hedgeAdjNext.next;
         }
 
-        HalfEdge hedge;
+        HalfEdgeD hedge;
 
         for (hedge = hedgeOppNext; hedge != hedgeOppPrev.next; hedge = hedge.next) {
             hedge.face = this;
@@ -333,7 +321,7 @@ class Face {
         }
 
         // handle the half edges at the head
-        Face discardedFace;
+        FaceD discardedFace;
 
         discardedFace = connectHalfEdges(hedgeOppPrev, hedgeAdjNext);
         if (discardedFace != null) {
@@ -356,21 +344,21 @@ class Face {
         return numVerts;
     }
 
-    public void triangulate(FaceList newFaces, double minArea) {
-        HalfEdge hedge;
+    public void triangulate(FaceListD newFaces, double minArea) {
+        HalfEdgeD hedge;
 
         if (numVertices() < 4) {
             return;
         }
 
-        Vertex v0 = he0.head();
+        VertexD v0 = he0.head();
 
         hedge = he0.next;
-        HalfEdge oppPrev = hedge.opposite;
-        Face face0 = null;
+        HalfEdgeD oppPrev = hedge.opposite;
+        FaceD face0 = null;
 
         for (hedge = hedge.next; hedge != he0.prev; hedge = hedge.next) {
-            Face face = createTriangle(v0, hedge.prev.head(), hedge.head(), minArea);
+            FaceD face = createTriangle(v0, hedge.prev.head(), hedge.head(), minArea);
             face.he0.next.setOpposite(oppPrev);
             face.he0.prev.setOpposite(hedge.opposite);
             oppPrev = face.he0;
@@ -379,7 +367,7 @@ class Face {
                 face0 = face;
             }
         }
-        hedge = new HalfEdge(he0.prev.prev.head(), this);
+        hedge = new HalfEdgeD(he0.prev.prev.head(), this);
         hedge.setOpposite(oppPrev);
 
         hedge.prev = he0;
@@ -391,38 +379,10 @@ class Face {
         computeNormalAndCentroid(minArea);
         checkConsistency();
 
-        for (Face face = face0; face != null; face = face.next) {
+        for (FaceD face = face0; face != null; face = face.next) {
             face.checkConsistency();
         }
 
-    }
-
-    /**
-     * return the squared area of the triangle defined by the half edge hedge0
-     * and the point at the head of hedge1.
-     * 
-     * @param hedge0
-     * @param hedge1
-     * @return
-     */
-    public double areaSquared(HalfEdge hedge0, HalfEdge hedge1) {
-        Point3d p0 = hedge0.tail().pnt;
-        Point3d p1 = hedge0.head().pnt;
-        Point3d p2 = hedge1.head().pnt;
-
-        double dx1 = p1.x - p0.x;
-        double dy1 = p1.y - p0.y;
-        double dz1 = p1.z - p0.z;
-
-        double dx2 = p2.x - p0.x;
-        double dy2 = p2.y - p0.y;
-        double dz2 = p2.z - p0.z;
-
-        double x = dy1 * dz2 - dz1 * dy2;
-        double y = dz1 * dx2 - dx1 * dz2;
-        double z = dx1 * dy2 - dy1 * dx2;
-
-        return x * x + y * y + z * z;
     }
 
     private void computeNormalAndCentroid() {
@@ -430,7 +390,7 @@ class Face {
         computeCentroid(centroid);
         planeOffset = normal.dot(centroid);
         int numv = 0;
-        HalfEdge he = he0;
+        HalfEdgeD he = he0;
         do {
             numv++;
             he = he.next;
@@ -446,17 +406,17 @@ class Face {
         planeOffset = normal.dot(centroid);
     }
 
-    private Face connectHalfEdges(HalfEdge hedgePrev, HalfEdge hedge) {
-        Face discardedFace = null;
+    private FaceD connectHalfEdges(HalfEdgeD hedgePrev, HalfEdgeD hedge) {
+        FaceD discardedFace = null;
 
         if (hedgePrev.oppositeFace() == hedge.oppositeFace()) { // then there is
                                                                 // a redundant
                                                                 // edge that we
                                                                 // can get rid
-                                                                // off
+                                                                // of
 
-            Face oppFace = hedge.oppositeFace();
-            HalfEdge hedgeOpp;
+            FaceD oppFace = hedge.oppositeFace();
+            HalfEdgeD hedgeOpp;
 
             if (hedgePrev == he0) {
                 he0 = hedge;
@@ -493,7 +453,7 @@ class Face {
 
     void checkConsistency() {
         // do a sanity check on the face
-        HalfEdge hedge = he0;
+        HalfEdgeD hedge = he0;
         double maxd = 0;
         int numv = 0;
 
@@ -501,7 +461,7 @@ class Face {
             throw new InternalErrorException("degenerate face: " + getVertexString());
         }
         do {
-            HalfEdge hedgeOpp = hedge.getOpposite();
+            HalfEdgeD hedgeOpp = hedge.getOpposite();
             if (hedgeOpp == null) {
                 throw new InternalErrorException("face " + getVertexString() + ": " + "unreflected half edge " + hedge.getVertexString());
             } else if (hedgeOpp.getOpposite() != hedge) {
@@ -511,7 +471,7 @@ class Face {
             if (hedgeOpp.head() != hedge.tail() || hedge.head() != hedgeOpp.tail()) {
                 throw new InternalErrorException("face " + getVertexString() + ": " + "half edge " + hedge.getVertexString() + " reflected by " + hedgeOpp.getVertexString());
             }
-            Face oppFace = hedgeOpp.face;
+            FaceD oppFace = hedgeOpp.face;
             if (oppFace == null) {
                 throw new InternalErrorException("face " + getVertexString() + ": " + "no face on half edge " + hedgeOpp.getVertexString());
             } else if (oppFace.mark == DELETED) {
@@ -529,5 +489,9 @@ class Face {
             throw new InternalErrorException("face " + getVertexString() + " numVerts=" + numVerts + " should be " + numv);
         }
 
+    }
+
+    public double norm(Vector3d vector3d) {
+        return Math.sqrt(vector3d.x * vector3d.x + vector3d.y * vector3d.y + vector3d.z * vector3d.z);
     }
 }

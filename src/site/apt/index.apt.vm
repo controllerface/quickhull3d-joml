@@ -74,7 +74,7 @@ with triangulated output from {{{http://www.qhull.org}qhull}}).
 *Degenerate Input
 
  It is assumed that the input points are
-non-degenerate in that they are not coincident, colinear, or colplanar, and
+non-degenerate in that they are not coincident, collinear, or coplanar, and
 thus the convex hull has a non-zero volume. If the input points are detected
 to be degenerate within the getDistanceTolerance(), an IllegalArgumentException will be thrown.
 

@@ -29,43 +29,46 @@ package com.github.quickhull3d;
  * #L%
  */
 
+import org.joml.Vector3d;
+
 /**
- * Maintains a single-linked list of faces for use by QuickHull3D
+ * Represents vertices of the hull, as well as the points from which it is
+ * formed.
+ * 
+ * @author John E. Lloyd, Fall 2004
  */
-class FaceList {
-
-    private Face head;
-
-    private Face tail;
+class VertexD
+{
 
     /**
-     * Clears this list.
+     * Spatial point associated with this vertex.
      */
-    public void clear() {
-        head = tail = null;
-    }
+    Vector3d pnt;
 
     /**
-     * Adds a vertex to the end of this list.
+     * Back index into an array.
      */
-    public void add(Face vtx) {
-        if (head == null) {
-            head = vtx;
-        } else {
-            tail.next = vtx;
-        }
-        vtx.next = null;
-        tail = vtx;
-    }
-
-    public Face first() {
-        return head;
-    }
+    int index;
 
     /**
-     * Returns true if this list is empty.
+     * List forward link.
      */
-    public boolean isEmpty() {
-        return head == null;
+    VertexD prev;
+
+    /**
+     * List backward link.
+     */
+    VertexD next;
+
+    /**
+     * Current face that this vertex is outside of.
+     */
+    FaceD face;
+
+    /**
+     * Constructs a vertex and sets its coordinates to 0.
+     */
+    public VertexD() {
+        pnt = new Vector3d();
     }
 }
