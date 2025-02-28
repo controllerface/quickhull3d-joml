@@ -68,16 +68,6 @@ public class Vector3d {
     }
 
     /**
-     * Creates a 3-vector by copying an existing one.
-     * 
-     * @param v
-     *            vector to be copied
-     */
-    public Vector3d(Vector3d v) {
-        set(v);
-    }
-
-    /**
      * Creates a 3-vector with the supplied element values.
      * 
      * @param x
@@ -92,63 +82,6 @@ public class Vector3d {
     }
 
     /**
-     * Gets a single element of this vector. Elements 0, 1, and 2 correspond to
-     * x, y, and z.
-     * 
-     * @param i
-     *            element index
-     * @return element value throws ArrayIndexOutOfBoundsException if i is not
-     *         in the range 0 to 2.
-     */
-    public double get(int i) {
-        switch (i) {
-            case 0: {
-                return x;
-            }
-            case 1: {
-                return y;
-            }
-            case 2: {
-                return z;
-            }
-            default: {
-                throw new ArrayIndexOutOfBoundsException(i);
-            }
-        }
-    }
-
-    /**
-     * Sets a single element of this vector. Elements 0, 1, and 2 correspond to
-     * x, y, and z.
-     * 
-     * @param i
-     *            element index
-     * @param value
-     *            element value
-     * @return element value throws ArrayIndexOutOfBoundsException if i is not
-     *         in the range 0 to 2.
-     */
-    public void set(int i, double value) {
-        switch (i) {
-            case 0: {
-                x = value;
-                break;
-            }
-            case 1: {
-                y = value;
-                break;
-            }
-            case 2: {
-                z = value;
-                break;
-            }
-            default: {
-                throw new ArrayIndexOutOfBoundsException(i);
-            }
-        }
-    }
-
-    /**
      * Sets the values of this vector to those of v1.
      * 
      * @param v1
@@ -158,20 +91,6 @@ public class Vector3d {
         x = v1.x;
         y = v1.y;
         z = v1.z;
-    }
-
-    /**
-     * Adds vector v1 to v2 and places the result in this vector.
-     * 
-     * @param v1
-     *            left-hand vector
-     * @param v2
-     *            right-hand vector
-     */
-    public void add(Vector3d v1, Vector3d v2) {
-        x = v1.x + v2.x;
-        y = v1.y + v2.y;
-        z = v1.z + v2.z;
     }
 
     /**
@@ -225,18 +144,18 @@ public class Vector3d {
     }
 
     /**
-     * Scales the elements of vector v1 by <code>s</code> and places the results
-     * in this vector.
+     * Scales the elements of this vector <code>s</code> and places the results
+     * in v1.
      * 
      * @param s
      *            scaling factor
      * @param v1
-     *            vector to be scaled
+     *            destination
      */
     public void scale(double s, Vector3d v1) {
-        x = s * v1.x;
-        y = s * v1.y;
-        z = s * v1.z;
+        v1.x = this.x * s;
+        v1.y = this.y * s;
+        v1.z = this.z * s;
     }
 
     /**
@@ -337,22 +256,20 @@ public class Vector3d {
     }
 
     /**
-     * Computes the cross product of v1 and v2 and places the result in this
-     * vector.
+     * Computes the cross product of this vector and v1 and places the result in v2.
      * 
-     * @param v1
-     *            left-hand vector
-     * @param v2
+     * @param v
      *            right-hand vector
+     * @param v2
+     *            destination
      */
-    public void cross(Vector3d v1, Vector3d v2) {
-        double tmpx = v1.y * v2.z - v1.z * v2.y;
-        double tmpy = v1.z * v2.x - v1.x * v2.z;
-        double tmpz = v1.x * v2.y - v1.y * v2.x;
-
-        x = tmpx;
-        y = tmpy;
-        z = tmpz;
+    public void cross(Vector3d v, Vector3d v2) {
+        double rx = org.joml.Math.fma(this.y, v.z, -this.z * v.y);
+        double ry = org.joml.Math.fma(this.z, v.x, -this.x * v.z);
+        double rz = org.joml.Math.fma(this.x, v.y, -this.y * v.x);
+        v2.x = rx;
+        v2.y = ry;
+        v2.z = rz;
     }
 
     /**

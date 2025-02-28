@@ -620,6 +620,23 @@ public class QuickHull3D {
         }
     }
 
+    public double get(Point3d point3d, int i) {
+        switch (i) {
+            case 0: {
+                return point3d.x;
+            }
+            case 1: {
+                return point3d.y;
+            }
+            case 2: {
+                return point3d.z;
+            }
+            default: {
+                throw new ArrayIndexOutOfBoundsException(i);
+            }
+        }
+    }
+
     /**
      * Creates the initial simplex from which the hull will be built.
      */
@@ -628,7 +645,7 @@ public class QuickHull3D {
         int imax = 0;
 
         for (int i = 0; i < 3; i++) {
-            double diff = maxVtxs[i].pnt.get(i) - minVtxs[i].pnt.get(i);
+            double diff = get(maxVtxs[i].pnt, i) - get(minVtxs[i].pnt, i);
             if (diff > max) {
                 max = diff;
                 imax = i;
@@ -656,7 +673,9 @@ public class QuickHull3D {
         u01.normalize();
         for (int i = 0; i < numPoints; i++) {
             diff02.sub(pointBuffer[i].pnt, vtx[0].pnt);
-            xprod.cross(u01, diff02);
+            //xprod.cross(u01, diff02);
+            u01.cross(diff02, xprod);
+
             double lenSqr = xprod.normSquared();
             if (lenSqr > maxSqr && pointBuffer[i] != vtx[0] && // paranoid
                     pointBuffer[i] != vtx[1]) {

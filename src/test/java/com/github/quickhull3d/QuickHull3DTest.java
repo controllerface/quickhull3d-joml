@@ -33,10 +33,6 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import com.github.quickhull3d.Point3d;
-import com.github.quickhull3d.QuickHull3D;
-import com.github.quickhull3d.Vector3d;
-
 /**
  * Testing class for QuickHull3D. Running the command
  * 
@@ -185,7 +181,7 @@ public class QuickHull3DTest {
             u.normalize();
             for (int i = 0; i < num; i++) {
                 double a = 2 * (rand.nextDouble() - 0.5);
-                pnt.scale(a, u);
+                u.scale(a, pnt);
                 pnt.add(base);
                 randomlyPerturb(pnt, tol);
                 coords[i * 3 + 0] = pnt.x;
@@ -201,7 +197,7 @@ public class QuickHull3DTest {
                                             // project it to the plane
                 Vector3d perp = new Vector3d();
                 pnt.setRandom(-1, 1, rand);
-                perp.scale(pnt.dot(nrm), nrm);
+                nrm.scale(pnt.dot(nrm), perp);
                 pnt.sub(perp);
                 pnt.add(base);
                 randomlyPerturb(pnt, tol);
