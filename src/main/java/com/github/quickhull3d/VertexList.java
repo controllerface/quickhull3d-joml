@@ -8,13 +8,13 @@ package com.github.quickhull3d;
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -32,26 +32,31 @@ package com.github.quickhull3d;
 /**
  * Maintains a double-linked list of vertices for use by QuickHull3D
  */
-class VertexListD {
+class VertexList
+{
+    private Vertex head;
 
-    private VertexD head;
-
-    private VertexD tail;
+    private Vertex tail;
 
     /**
      * Clears this list.
      */
-    public void clear() {
+    public void clear()
+    {
         head = tail = null;
     }
 
     /**
      * Adds a vertex to the end of this list.
      */
-    public void add(VertexD vtx) {
-        if (head == null) {
+    public void add(Vertex vtx)
+    {
+        if (head == null)
+        {
             head = vtx;
-        } else {
+        }
+        else
+        {
             tail.next = vtx;
         }
         vtx.prev = tail;
@@ -62,14 +67,19 @@ class VertexListD {
     /**
      * Adds a chain of vertices to the end of this list.
      */
-    public void addAll(VertexD vtx) {
-        if (head == null) {
+    public void addAll(Vertex vtx)
+    {
+        if (head == null)
+        {
             head = vtx;
-        } else {
+        }
+        else
+        {
             tail.next = vtx;
         }
         vtx.prev = tail;
-        while (vtx.next != null) {
+        while (vtx.next != null)
+        {
             vtx = vtx.next;
         }
         tail = vtx;
@@ -78,15 +88,22 @@ class VertexListD {
     /**
      * Deletes a vertex from this list.
      */
-    public void delete(VertexD vtx) {
-        if (vtx.prev == null) {
+    public void delete(Vertex vtx)
+    {
+        if (vtx.prev == null)
+        {
             head = vtx.next;
-        } else {
+        }
+        else
+        {
             vtx.prev.next = vtx.next;
         }
-        if (vtx.next == null) {
+        if (vtx.next == null)
+        {
             tail = vtx.prev;
-        } else {
+        }
+        else
+        {
             vtx.next.prev = vtx.prev;
         }
     }
@@ -94,15 +111,22 @@ class VertexListD {
     /**
      * Deletes a chain of vertices from this list.
      */
-    public void delete(VertexD vtx1, VertexD vtx2) {
-        if (vtx1.prev == null) {
+    public void delete(Vertex vtx1, Vertex vtx2)
+    {
+        if (vtx1.prev == null)
+        {
             head = vtx2.next;
-        } else {
+        }
+        else
+        {
             vtx1.prev.next = vtx2.next;
         }
-        if (vtx2.next == null) {
+        if (vtx2.next == null)
+        {
             tail = vtx1.prev;
-        } else {
+        }
+        else
+        {
             vtx2.next.prev = vtx1.prev;
         }
     }
@@ -110,11 +134,15 @@ class VertexListD {
     /**
      * Inserts a vertex into this list before another specificed vertex.
      */
-    public void insertBefore(VertexD vtx, VertexD next) {
+    public void insertBefore(Vertex vtx, Vertex next)
+    {
         vtx.prev = next.prev;
-        if (next.prev == null) {
+        if (next.prev == null)
+        {
             head = vtx;
-        } else {
+        }
+        else
+        {
             next.prev.next = vtx;
         }
         vtx.next = next;
@@ -124,14 +152,16 @@ class VertexListD {
     /**
      * Returns the first element in this list.
      */
-    public VertexD first() {
+    public Vertex first()
+    {
         return head;
     }
 
     /**
      * Returns true if this list is empty.
      */
-    public boolean isEmpty() {
+    public boolean isEmpty()
+    {
         return head == null;
     }
 }

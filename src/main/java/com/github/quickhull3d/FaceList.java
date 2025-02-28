@@ -8,13 +8,13 @@ package com.github.quickhull3d;
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -32,33 +32,39 @@ package com.github.quickhull3d;
 /**
  * Maintains a single-linked list of faces for use by QuickHull3D
  */
-class FaceListD {
+class FaceList
+{
+    private Face head;
 
-    private FaceD head;
-
-    private FaceD tail;
+    private Face tail;
 
     /**
      * Clears this list.
      */
-    public void clear() {
+    public void clear()
+    {
         head = tail = null;
     }
 
     /**
      * Adds a vertex to the end of this list.
      */
-    public void add(FaceD vtx) {
-        if (head == null) {
+    public void add(Face vtx)
+    {
+        if (head == null)
+        {
             head = vtx;
-        } else {
+        }
+        else
+        {
             tail.next = vtx;
         }
         vtx.next = null;
         tail = vtx;
     }
 
-    public FaceD first() {
+    public Face first()
+    {
         return head;
     }
 }

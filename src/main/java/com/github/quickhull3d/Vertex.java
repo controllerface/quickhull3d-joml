@@ -8,13 +8,13 @@ package com.github.quickhull3d;
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -34,12 +34,11 @@ import org.joml.Vector3d;
 /**
  * Represents vertices of the hull, as well as the points from which it is
  * formed.
- * 
+ *
  * @author John E. Lloyd, Fall 2004
  */
-class VertexD
+class Vertex
 {
-
     /**
      * Spatial point associated with this vertex.
      */
@@ -53,22 +52,23 @@ class VertexD
     /**
      * List forward link.
      */
-    VertexD prev;
+    Vertex prev;
 
     /**
      * List backward link.
      */
-    VertexD next;
+    Vertex next;
 
     /**
      * Current face that this vertex is outside of.
      */
-    FaceD face;
+    Face face;
 
     /**
      * Constructs a vertex and sets its coordinates to 0.
      */
-    public VertexD() {
+    public Vertex()
+    {
         pnt = new Vector3d();
     }
 }
