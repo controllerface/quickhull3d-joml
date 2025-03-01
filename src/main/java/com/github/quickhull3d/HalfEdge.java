@@ -76,17 +76,6 @@ class HalfEdge
     }
 
     /**
-     * Sets the value of the next edge adjacent (counter-clockwise) to this one
-     * within the triangle.
-     *
-     * @param edge next adjacent edge
-     */
-    public void setNext(HalfEdge edge)
-    {
-        next = edge;
-    }
-
-    /**
      * Gets the value of the next edge adjacent (counter-clockwise) to this one
      * within the triangle.
      *
@@ -95,17 +84,6 @@ class HalfEdge
     public HalfEdge getNext()
     {
         return next;
-    }
-
-    /**
-     * Sets the value of the previous edge adjacent (clockwise) to this one
-     * within the triangle.
-     *
-     * @param edge previous adjacent edge
-     */
-    public void setPrev(HalfEdge edge)
-    {
-        prev = edge;
     }
 
     /**

@@ -73,33 +73,6 @@ class Face
         mark = VISIBLE;
     }
 
-    public static Face create(Vertex[] vtxArray, int[] indices)
-    {
-        Face face = new Face();
-        HalfEdge hePrev = null;
-        for (int index : indices)
-        {
-            HalfEdge he = new HalfEdge(vtxArray[index], face);
-            if (hePrev != null)
-            {
-                he.setPrev(hePrev);
-                hePrev.setNext(he);
-            }
-            else
-            {
-                face.he0 = he;
-            }
-            hePrev = he;
-        }
-        face.he0.setPrev(hePrev);
-        assert hePrev != null;
-        hePrev.setNext(face.he0);
-
-        // compute the normal and offset
-        face.computeNormalAndCentroid();
-        return face;
-    }
-
     public static Face createTriangle(Vertex v0, Vertex v1, Vertex v2)
     {
         return createTriangle(v0, v1, v2, 0);
@@ -231,28 +204,6 @@ class Face
     public double distanceToPlane(Vector3d p)
     {
         return normal.x * p.x + normal.y * p.y + normal.z * p.z - planeOffset;
-    }
-
-    /**
-     * Finds the half-edge within this face which has tail <code>vt</code> and
-     * head <code>vh</code>.
-     *
-     * @param vt tail point
-     * @param vh head point
-     * @return the half-edge, or null if none is found.
-     */
-    public HalfEdge findEdge(Vertex vt, Vertex vh)
-    {
-        HalfEdge he = he0;
-        do
-        {
-            if (he.head() == vh && he.tail() == vt)
-            {
-                return he;
-            }
-            he = he.next;
-        } while (he != he0);
-        return null;
     }
 
     public Vector3d getCentroid()
@@ -546,7 +497,6 @@ class Face
         {
             throw new InternalErrorException("face " + getVertexString() + " numVerts=" + numVerts + " should be " + numv);
         }
-
     }
 
     public double norm(Vector3d vector3d)
