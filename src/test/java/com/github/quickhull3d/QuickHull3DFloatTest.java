@@ -58,8 +58,7 @@ import java.util.Random;
  */
 public class QuickHull3DFloatTest
 {
-
-    static private final double DOUBLE_PREC = 2.2204460492503131e-16;
+    static private final float FLOAT_PREC = 1.1920929e-7f;
 
     static boolean triangulate = false;
 
@@ -144,10 +143,10 @@ public class QuickHull3DFloatTest
         return coords;
     }
 
-    private void randomlyPerturb(Vector3f pnt, double tol) {
-        pnt.x += (float) (tol * (rand.nextFloat() - 0.5f));
-        pnt.y += (float) (tol * (rand.nextFloat() - 0.5f));
-        pnt.z += (float) (tol * (rand.nextFloat() - 0.5f));
+    private void randomlyPerturb(Vector3f pnt, float tol) {
+        pnt.x += tol * (rand.nextFloat() - 0.5f);
+        pnt.y += tol * (rand.nextFloat() - 0.5f);
+        pnt.z += tol * (rand.nextFloat() - 0.5f);
     }
 
     /**
@@ -168,7 +167,7 @@ public class QuickHull3DFloatTest
         Vector3f base = new Vector3f();
         setRandom(base, -1, 1, rand);
 
-        double tol = DOUBLE_PREC;
+        float tol = FLOAT_PREC;
 
         if (dimen == 0) {
             for (int i = 0; i < num; i++) {

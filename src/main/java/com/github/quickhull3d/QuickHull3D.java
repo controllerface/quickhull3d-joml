@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import org.joml.Vector3d;
+import org.joml.Vector3f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -199,6 +200,8 @@ public class QuickHull3D
      * Precision of a double.
      */
     private static final double DOUBLE_PREC = 2.2204460492503131e-16;
+
+    static private final float FLOAT_PREC = 1.1920929e-7f;
 
     /**
      * Returns the distance tolerance that was used for the most recently
@@ -477,6 +480,7 @@ public class QuickHull3D
         {
             throw new IllegalArgumentException("Coordinate array too small for specified number of points");
         }
+        explicitTolerance = FLOAT_PREC;
         initBuffers(nump);
         double[] double_buffer = new double[coords.length];
         for (int i = 0; i < coords.length; i++)
@@ -521,6 +525,31 @@ public class QuickHull3D
         }
         initBuffers(nump);
         setPoints(points, nump);
+        buildHull();
+    }
+
+    public void build(Vector3f[] points) throws IllegalArgumentException
+    {
+        build(points, points.length);
+    }
+
+    public void build(Vector3f[] points, int nump) throws IllegalArgumentException
+    {
+        if (nump < 4)
+        {
+            throw new IllegalArgumentException("Less than four input points specified");
+        }
+        if (points.length < nump)
+        {
+            throw new IllegalArgumentException("Point array too small for specified number of points");
+        }
+        initBuffers(nump);
+        Vector3d[] double_buffer = new Vector3d[points.length];
+        for (int i = 0; i < points.length; i++)
+        {
+            double_buffer[i] = new Vector3d(points[i]);
+        }
+        setPoints(double_buffer, nump);
         buildHull();
     }
 
@@ -829,6 +858,16 @@ public class QuickHull3D
         for (int i = 0; i < numVertices; i++)
         {
             vtxs[i] = pointBuffer[vertexPointIndices[i]].pnt;
+        }
+        return vtxs;
+    }
+
+    public Vector3f[] getFloatVertices()
+    {
+        Vector3f[] vtxs = new Vector3f[numVertices];
+        for (int i = 0; i < numVertices; i++)
+        {
+            vtxs[i] = new Vector3f(pointBuffer[vertexPointIndices[i]].pnt);
         }
         return vtxs;
     }
