@@ -103,8 +103,7 @@ public class TestConvexHullFloat
             new Vector3f(0.2100642609503719f, -0.4499717643018549f, 0.3245569875692548f)
         };
 
-        QuickHull3D covexHull = new QuickHull3D();
-        covexHull.build(points);
+        QuickHull3D covexHull = new QuickHull3D(points);
 
         System.out.println("Vertices:");
         Vector3f[] vertices = covexHull.getFloatVertices();

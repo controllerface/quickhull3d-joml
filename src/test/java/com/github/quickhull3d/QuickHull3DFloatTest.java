@@ -361,9 +361,8 @@ public class QuickHull3DFloatTest
     }
 
     void singleTest(float[] coords, int[][] checkFaces) throws Exception {
-        QuickHull3D hull = new QuickHull3D();
+        QuickHull3D hull = new QuickHull3D(coords);
 
-        hull.build(coords, coords.length / 3);
         if (triangulate) {
             hull.triangulate();
         }
@@ -415,10 +414,10 @@ public class QuickHull3DFloatTest
     {
         float[] coordsx = addDegeneracy(degeneracyTest, coords, hull);
 
-        QuickHull3D xhull = new QuickHull3D();
+        QuickHull3D xhull = null;
 
         try {
-            xhull.build(coordsx, coordsx.length / 3);
+            xhull = new QuickHull3D(coordsx);
             if (triangulate) {
                 xhull.triangulate();
             }
@@ -428,7 +427,7 @@ public class QuickHull3DFloatTest
             }
         }
 
-        if (!xhull.check(System.out)) {
+        if (xhull == null || !xhull.check(System.out)) {
             throw new AssertionError();
         }
     }
@@ -468,10 +467,9 @@ public class QuickHull3DFloatTest
     }
 
     void testException(float[] coords, String msg) {
-        QuickHull3D hull = new QuickHull3D();
         Exception ex = null;
         try {
-            hull.build(coords);
+            new QuickHull3D(coords);
         } catch (Exception e) {
             ex = e;
         }
@@ -721,7 +719,7 @@ public class QuickHull3DFloatTest
         }
     }
 
-    protected void setRandom(Vector3f vector3f, float lower, float upper, Random generator) {
+    private void setRandom(Vector3f vector3f, float lower, float upper, Random generator) {
         float range = upper - lower;
 
         vector3f.x = generator.nextFloat() * range + lower;

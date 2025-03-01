@@ -102,11 +102,10 @@ public class TestConvexHull {
             new Vector3d(0.2100642609503719, -0.4499717643018549, 0.3245569875692548)
         };
 
-        QuickHull3D covexHull = new QuickHull3D();
-        covexHull.build(points);
+        QuickHull3D convexHull = new QuickHull3D(points);
 
         System.out.println("Vertices:");
-        Vector3d[] vertices = covexHull.getVertices();
+        Vector3d[] vertices = convexHull.getDoubleVertices();
 
         Assert.assertEquals(expected.length, vertices.length);
         for (int i = 0; i < vertices.length; i++) {

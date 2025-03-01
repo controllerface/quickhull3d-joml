@@ -32,7 +32,7 @@ package com.github.quickhull3d;
 /**
  * Maintains a single-linked list of faces for use by QuickHull3D
  */
-class FaceList
+final class FaceList
 {
     private Face head;
 

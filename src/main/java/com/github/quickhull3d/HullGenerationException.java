@@ -30,11 +30,11 @@ package com.github.quickhull3d;
  */
 
 /**
- * Exception thrown when QuickHull3D encounters an internal error.
+ * Exception thrown when QuickHull3D encounters an error when attempting to generate a convex hull.
  */
-public class InternalErrorException extends RuntimeException
+public class HullGenerationException extends RuntimeException
 {
-    public InternalErrorException(String msg)
+    public HullGenerationException(String msg)
     {
         super(msg);
     }

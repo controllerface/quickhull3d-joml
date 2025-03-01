@@ -37,7 +37,7 @@ import org.joml.Vector3d;
  *
  * @author John E. Lloyd, Fall 2004
  */
-class Vertex
+final class Vertex
 {
     /**
      * Spatial point associated with this vertex.
@@ -70,5 +70,17 @@ class Vertex
     public Vertex()
     {
         pnt = new Vector3d();
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Vertex{" +
+            "pnt=" + pnt +
+            ", index=" + index +
+            ", prev=" + prev +
+            ", next=" + next +
+            ", face=" + face +
+            '}';
     }
 }

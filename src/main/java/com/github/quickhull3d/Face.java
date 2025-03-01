@@ -40,36 +40,34 @@ import org.joml.Vector3d;
  *
  * @author John E. Lloyd, Fall 2004
  */
-class Face
+final class Face
 {
-    protected static final int DELETED = 3;
+    public static final int DELETED = 3;
 
-    protected static final int NON_CONVEX = 2;
+    public static final int NON_CONVEX = 2;
 
-    protected static final int VISIBLE = 1;
+    public static final int VISIBLE = 1;
 
-    protected double area;
+    private final Vector3d centroid = new Vector3d();
 
-    protected HalfEdge he0;
+    private final Vector3d normal = new Vector3d();
 
-    protected int mark;
+    int mark;
 
-    protected Face next;
+    int numVerts;
 
-    protected int numVerts;
+    double area;
 
-    protected Vertex outside;
+    double planeOffset;
 
-    protected double planeOffset;
+    HalfEdge he0;
 
-    private final Vector3d centroid;
+    Face next;
 
-    private final Vector3d normal;
+    Vertex outside;
 
     public Face()
     {
-        normal = new Vector3d();
-        centroid = new Vector3d();
         mark = VISIBLE;
     }
 
@@ -383,7 +381,7 @@ class Face
         } while (he != he0);
         if (numv != numVerts)
         {
-            throw new InternalErrorException("face " + getVertexString() + " numVerts=" + numVerts + " should be " + numv);
+            throw new HullGenerationException("face " + getVertexString() + " numVerts=" + numVerts + " should be " + numv);
         }
     }
 
@@ -457,32 +455,32 @@ class Face
 
         if (numVerts < 3)
         {
-            throw new InternalErrorException("degenerate face: " + getVertexString());
+            throw new HullGenerationException("degenerate face: " + getVertexString());
         }
         do
         {
             HalfEdge hedgeOpp = hedge.getOpposite();
             if (hedgeOpp == null)
             {
-                throw new InternalErrorException("face " + getVertexString() + ": " + "unreflected half edge " + hedge.getVertexString());
+                throw new HullGenerationException("face " + getVertexString() + ": " + "unreflected half edge " + hedge.getVertexString());
             }
             else if (hedgeOpp.getOpposite() != hedge)
             {
-                throw new InternalErrorException("face " + getVertexString() + ": " + "opposite half edge " + hedgeOpp.getVertexString() + " has opposite "
+                throw new HullGenerationException("face " + getVertexString() + ": " + "opposite half edge " + hedgeOpp.getVertexString() + " has opposite "
                     + hedgeOpp.getOpposite().getVertexString());
             }
             if (hedgeOpp.head() != hedge.tail() || hedge.head() != hedgeOpp.tail())
             {
-                throw new InternalErrorException("face " + getVertexString() + ": " + "half edge " + hedge.getVertexString() + " reflected by " + hedgeOpp.getVertexString());
+                throw new HullGenerationException("face " + getVertexString() + ": " + "half edge " + hedge.getVertexString() + " reflected by " + hedgeOpp.getVertexString());
             }
             Face oppFace = hedgeOpp.face;
             if (oppFace == null)
             {
-                throw new InternalErrorException("face " + getVertexString() + ": " + "no face on half edge " + hedgeOpp.getVertexString());
+                throw new HullGenerationException("face " + getVertexString() + ": " + "no face on half edge " + hedgeOpp.getVertexString());
             }
             else if (oppFace.mark == DELETED)
             {
-                throw new InternalErrorException("face " + getVertexString() + ": " + "opposite face " + oppFace.getVertexString() + " not on hull");
+                throw new HullGenerationException("face " + getVertexString() + ": " + "opposite face " + oppFace.getVertexString() + " not on hull");
             }
             double d = Math.abs(distanceToPlane(hedge.head().pnt));
             if (d > maxd)
@@ -495,7 +493,7 @@ class Face
 
         if (numv != numVerts)
         {
-            throw new InternalErrorException("face " + getVertexString() + " numVerts=" + numVerts + " should be " + numv);
+            throw new HullGenerationException("face " + getVertexString() + " numVerts=" + numVerts + " should be " + numv);
         }
     }
 

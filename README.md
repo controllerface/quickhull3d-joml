@@ -26,7 +26,7 @@ See the maven project site here: [quickhull3d](http://quickhull3d.github.io/quic
   - Where applicable, non-indexed (for-each) loops were used instead of indexed for loops
   - Instances of `StringBuffer` were replaced with `StringBuilder`
   - Unused functions and fields were removed, as well as commented out code
-  - Several `protected` fields and methods were made `private` where they did not need to be exposed
+  - Several `protected` fields and methods were made `private` or package-private where they did not need to be exposed, as there did not seem to be any use case for sub-classing
   - Several logging calls were parameterized instead of using concatenation
     - Unnecessary calls to `LOG.isDebugEnabled()` were removed as a result
 - My personal code-style settings were applied to the project

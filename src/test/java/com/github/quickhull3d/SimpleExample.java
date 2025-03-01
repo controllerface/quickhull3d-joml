@@ -59,7 +59,7 @@ public class SimpleExample {
         hull.build(points);
 
         System.out.println("Vertices:");
-        Vector3d[] vertices = hull.getVertices();
+        Vector3d[] vertices = hull.getDoubleVertices();
         for (int i = 0; i < vertices.length; i++) {
             Vector3d pnt = vertices[i];
             System.out.println(pnt.x + " " + pnt.y + " " + pnt.z);

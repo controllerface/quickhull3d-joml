@@ -35,32 +35,32 @@ package com.github.quickhull3d;
  *
  * @author John E. Lloyd, Fall 2004
  */
-class HalfEdge
+final class HalfEdge
 {
     /**
      * The vertex associated with the head of this half-edge.
      */
-    protected Vertex vertex;
+    private final Vertex vertex;
 
     /**
      * Triangular face associated with this half-edge.
      */
-    protected Face face;
+    Face face;
 
     /**
      * Next half-edge in the triangle.
      */
-    protected HalfEdge next;
+    HalfEdge next;
 
     /**
      * Previous half-edge in the triangle.
      */
-    protected HalfEdge prev;
+    HalfEdge prev;
 
     /**
      * Half-edge associated with the opposite triangle adjacent to this edge.
      */
-    protected HalfEdge opposite;
+    HalfEdge opposite;
 
     /**
      * Constructs a HalfEdge with head vertex <code>v</code> and left-hand

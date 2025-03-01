@@ -32,7 +32,7 @@ package com.github.quickhull3d;
 /**
  * Maintains a double-linked list of vertices for use by QuickHull3D
  */
-class VertexList
+final class VertexList
 {
     private Vertex head;
 
