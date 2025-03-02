@@ -42,7 +42,7 @@ final class Vertex
     /**
      * Spatial point associated with this vertex.
      */
-    Vector3d pnt;
+    Vector3d point;
 
     /**
      * Back index into an array.
@@ -69,14 +69,14 @@ final class Vertex
      */
     public Vertex()
     {
-        pnt = new Vector3d();
+        point = new Vector3d();
     }
 
     @Override
     public String toString()
     {
         return "Vertex{" +
-            "pnt=" + pnt +
+            "pnt=" + point +
             ", index=" + index +
             ", prev=" + prev +
             ", next=" + next +

@@ -178,7 +178,7 @@ final class HalfEdge
     {
         if (tail() != null)
         {
-            return head().pnt.distanceSquared(tail().pnt);
+            return head().point.distanceSquared(tail().point);
         }
         else
         {

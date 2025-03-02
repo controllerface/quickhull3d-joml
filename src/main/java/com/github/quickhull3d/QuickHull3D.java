@@ -146,7 +146,7 @@ public class QuickHull3D
      * Specifies that (on output) the vertex indices for a face should be
      * numbered with respect to the original input points.
      */
-    private static final int POINT_RELATIVE = 0x8;
+    private static final int POINT_RELATIVE = 0x4;
 
     /**
      * Specifies that the distance tolerance should be computed automatically
@@ -189,9 +189,9 @@ public class QuickHull3D
 
     private final VertexList claimed = new VertexList();
 
-    private int numVertices;
+    private int vertexCount;
 
-    private int numPoints;
+    private int pointCount;
 
     private double explicitTolerance = AUTOMATIC_TOLERANCE;
 
@@ -340,7 +340,6 @@ public class QuickHull3D
             if (face.mark == Face.VISIBLE)
             {
                 face.triangulate(newFaces, minArea);
-                // splitFace (face);
             }
         }
         for (Face face = newFaces.first(); face != null; face = face.next)
@@ -357,12 +356,12 @@ public class QuickHull3D
      */
     public Vector3d[] getDoubleVertices()
     {
-        Vector3d[] vtxs = new Vector3d[numVertices];
-        for (int i = 0; i < numVertices; i++)
+        Vector3d[] vertices = new Vector3d[vertexCount];
+        for (int i = 0; i < vertexCount; i++)
         {
-            vtxs[i] = pointBuffer[vertexPointIndices[i]].pnt;
+            vertices[i] = pointBuffer[vertexPointIndices[i]].point;
         }
-        return vtxs;
+        return vertices;
     }
 
     /**
@@ -373,12 +372,12 @@ public class QuickHull3D
      */
     public Vector3f[] getFloatVertices()
     {
-        Vector3f[] vtxs = new Vector3f[numVertices];
-        for (int i = 0; i < numVertices; i++)
+        Vector3f[] vertices = new Vector3f[vertexCount];
+        for (int i = 0; i < vertexCount; i++)
         {
-            vtxs[i] = new Vector3f(pointBuffer[vertexPointIndices[i]].pnt);
+            vertices[i] = new Vector3f(pointBuffer[vertexPointIndices[i]].point);
         }
-        return vtxs;
+        return vertices;
     }
 
     /**
@@ -389,8 +388,8 @@ public class QuickHull3D
      */
     public int[] getVertexPointIndices()
     {
-        int[] indices = new int[numVertices];
-        System.arraycopy(vertexPointIndices, 0, indices, 0, numVertices);
+        int[] indices = new int[vertexCount];
+        System.arraycopy(vertexPointIndices, 0, indices, 0, vertexCount);
         return indices;
     }
 
@@ -430,173 +429,171 @@ public class QuickHull3D
     public int[][] getFaces(int indexFlags)
     {
         int[][] allFaces = new int[faces.size()][];
-        int k = 0;
+        int faceIndex = 0;
         for (Face face : faces)
         {
-            allFaces[k] = new int[face.numVertices()];
-            getFaceIndices(allFaces[k], face, indexFlags);
-            k++;
+            allFaces[faceIndex] = new int[face.vertexCount()];
+            getFaceIndices(allFaces[faceIndex], face, indexFlags);
+            faceIndex++;
         }
         return allFaces;
     }
 
-
-
-    private void initBuffers(int nump)
+    private void initBuffers(int pointCount)
     {
-        if (pointBuffer.length < nump)
+        if (pointBuffer.length < pointCount)
         {
-            Vertex[] newBuffer = new Vertex[nump];
-            vertexPointIndices = new int[nump];
-            System.arraycopy(pointBuffer, 0, newBuffer, 0, pointBuffer.length);
-            for (int i = pointBuffer.length; i < nump; i++)
+            Vertex[] pointBuffer = new Vertex[pointCount];
+            vertexPointIndices = new int[pointCount];
+            System.arraycopy(this.pointBuffer, 0, pointBuffer, 0, this.pointBuffer.length);
+            for (int i = this.pointBuffer.length; i < pointCount; i++)
             {
-                newBuffer[i] = new Vertex();
+                pointBuffer[i] = new Vertex();
             }
-            pointBuffer = newBuffer;
+            this.pointBuffer = pointBuffer;
         }
         faces.clear();
         claimed.clear();
-        numPoints = nump;
+        this.pointCount = pointCount;
     }
 
     private void buildHull()
     {
-        int cnt = 0;
-        Vertex eyeVtx;
+        int pointCount = 0;
+        Vertex eyeVertex;
 
         computeMaxAndMin();
         createInitialSimplex();
-        while ((eyeVtx = nextPointToAdd()) != null)
+        while ((eyeVertex = nextPointToAdd()) != null)
         {
-            addPointToHull(eyeVtx);
-            cnt++;
-            LOG.debug("iteration {} done", cnt);
+            addPointToHull(eyeVertex);
+            pointCount++;
+            LOG.debug("iteration {} done", pointCount);
         }
         reindexFacesAndVertices();
         LOG.debug("hull done");
     }
 
-    private void build(double[] coords, int nump) throws IllegalArgumentException
+    private void build(double[] coords, int pointCount) throws IllegalArgumentException
     {
-        if (nump < 4)
+        if (pointCount < 4)
         {
             throw new IllegalArgumentException("Less than four input points specified");
         }
-        if (coords.length / 3 < nump)
+        if (coords.length / 3 < pointCount)
         {
             throw new IllegalArgumentException("Coordinate array too small for specified number of points");
         }
-        initBuffers(nump);
-        setPoints(coords, nump);
+        initBuffers(pointCount);
+        setPoints(coords, pointCount);
         buildHull();
     }
 
-    private void build(float[] coords, int nump) throws IllegalArgumentException
+    private void build(float[] coords, int pointCount) throws IllegalArgumentException
     {
-        if (nump < 4)
+        if (pointCount < 4)
         {
             throw new IllegalArgumentException("Less than four input points specified");
         }
-        if (coords.length / 3 < nump)
+        if (coords.length / 3 < pointCount)
         {
             throw new IllegalArgumentException("Coordinate array too small for specified number of points");
         }
         explicitTolerance = FLOAT_PREC;
-        initBuffers(nump);
+        initBuffers(pointCount);
         double[] double_buffer = new double[coords.length];
         for (int i = 0; i < coords.length; i++)
         {
             double_buffer[i] = coords[i];
         }
-        setPoints(double_buffer, nump);
+        setPoints(double_buffer, pointCount);
         buildHull();
     }
 
-    private void build(Vector3d[] points, int nump) throws IllegalArgumentException
+    private void build(Vector3d[] points, int pointCount) throws IllegalArgumentException
     {
-        if (nump < 4)
+        if (pointCount < 4)
         {
             throw new IllegalArgumentException("Less than four input points specified");
         }
-        if (points.length < nump)
+        if (points.length < pointCount)
         {
             throw new IllegalArgumentException("Point array too small for specified number of points");
         }
-        initBuffers(nump);
-        setPoints(points, nump);
+        initBuffers(pointCount);
+        setPoints(points, pointCount);
         buildHull();
     }
 
-    private void build(Vector3f[] points, int nump) throws IllegalArgumentException
+    private void build(Vector3f[] points, int pointCount) throws IllegalArgumentException
     {
-        if (nump < 4)
+        if (pointCount < 4)
         {
             throw new IllegalArgumentException("Less than four input points specified");
         }
-        if (points.length < nump)
+        if (points.length < pointCount)
         {
             throw new IllegalArgumentException("Point array too small for specified number of points");
         }
-        initBuffers(nump);
+        initBuffers(pointCount);
         Vector3d[] double_buffer = new Vector3d[points.length];
         for (int i = 0; i < points.length; i++)
         {
             double_buffer[i] = new Vector3d(points[i]);
         }
-        setPoints(double_buffer, nump);
+        setPoints(double_buffer, pointCount);
         buildHull();
     }
 
-    private void setPoints(double[] coords, int nump)
+    private void setPoints(double[] coords, int pointCount)
     {
-        for (int i = 0; i < nump; i++)
+        for (int i = 0; i < pointCount; i++)
         {
-            Vertex vtx = pointBuffer[i];
-            vtx.pnt.set(coords[i * 3], coords[i * 3 + 1], coords[i * 3 + 2]);
-            vtx.index = i;
+            Vertex vertex = pointBuffer[i];
+            vertex.point.set(coords[i * 3], coords[i * 3 + 1], coords[i * 3 + 2]);
+            vertex.index = i;
         }
     }
 
-    private void setPoints(Vector3d[] pnts, int nump)
+    private void setPoints(Vector3d[] pnts, int pointCount)
     {
-        for (int i = 0; i < nump; i++)
+        for (int i = 0; i < pointCount; i++)
         {
-            Vertex vtx = pointBuffer[i];
-            vtx.pnt.set(pnts[i]);
-            vtx.index = i;
+            Vertex vertex = pointBuffer[i];
+            vertex.point.set(pnts[i]);
+            vertex.index = i;
         }
     }
 
-    private void addPointToFace(Vertex vtx, Face face)
+    private void addPointToFace(Vertex vertex, Face face)
     {
-        vtx.face = face;
+        vertex.face = face;
 
         if (face.outside == null)
         {
-            claimed.add(vtx);
+            claimed.add(vertex);
         }
         else
         {
-            claimed.insertBefore(vtx, face.outside);
+            claimed.insertBefore(vertex, face.outside);
         }
-        face.outside = vtx;
+        face.outside = vertex;
     }
 
-    private void removePointFromFace(Vertex vtx, Face face)
+    private void removePointFromFace(Vertex vertex, Face face)
     {
-        if (vtx == face.outside)
+        if (vertex == face.outside)
         {
-            if (vtx.next != null && vtx.next.face == face)
+            if (vertex.next != null && vertex.next.face == face)
             {
-                face.outside = vtx.next;
+                face.outside = vertex.next;
             }
             else
             {
                 face.outside = null;
             }
         }
-        claimed.delete(vtx);
+        claimed.delete(vertex);
     }
 
     private Vertex removeAllPointsFromFace(Face face)
@@ -627,12 +624,12 @@ public class QuickHull3D
         {
             maxVertices[i] = minVertices[i] = pointBuffer[0];
         }
-        max.set(pointBuffer[0].pnt);
-        min.set(pointBuffer[0].pnt);
+        max.set(pointBuffer[0].point);
+        min.set(pointBuffer[0].point);
 
-        for (int i = 1; i < numPoints; i++)
+        for (int i = 1; i < pointCount; i++)
         {
-            Vector3d pnt = pointBuffer[i].pnt;
+            Vector3d pnt = pointBuffer[i].point;
             if (pnt.x > max.x)
             {
                 max.x = pnt.x;
@@ -685,91 +682,91 @@ public class QuickHull3D
      */
     private void createInitialSimplex() throws IllegalArgumentException
     {
-        double max = 0;
-        int imax = 0;
+        double maxDiff = 0;
+        int maxIndex = 0;
 
         for (int i = 0; i < 3; i++)
         {
-            double diff = getByIndex(maxVertices[i].pnt, i) - getByIndex(minVertices[i].pnt, i);
-            if (diff > max)
+            double diff = getByIndex(maxVertices[i].point, i) - getByIndex(minVertices[i].point, i);
+            if (diff > maxDiff)
             {
-                max = diff;
-                imax = i;
+                maxDiff = diff;
+                maxIndex = i;
             }
         }
 
-        if (max <= tolerance)
+        if (maxDiff <= tolerance)
         {
             throw new IllegalArgumentException("Input points appear to be coincident");
         }
-        Vertex[] vtx = new Vertex[4];
+        Vertex[] vertexBuffer = new Vertex[4];
         // set first two vertices to be those with the greatest
         // one dimensional separation
 
-        vtx[0] = maxVertices[imax];
-        vtx[1] = minVertices[imax];
+        vertexBuffer[0] = maxVertices[maxIndex];
+        vertexBuffer[1] = minVertices[maxIndex];
 
         // set third vertex to be the vertex farthest from
-        // the line between vtx0 and vtx1
-        Vector3d u01 = new Vector3d();
-        Vector3d diff02 = new Vector3d();
-        Vector3d nrml = new Vector3d();
-        Vector3d xprod = new Vector3d();
-        double maxSqr = 0;
-        vtx[1].pnt.sub(vtx[0].pnt, u01);
-        u01.normalize();
-        for (int i = 0; i < numPoints; i++)
-        {
-            pointBuffer[i].pnt.sub(vtx[0].pnt, diff02);
-            //xprod.cross(u01, diff02);
-            u01.cross(diff02, xprod);
+        // the line between vertex0 and vertex1
+        Vector3d differenceA = new Vector3d();
+        Vector3d differenceB = new Vector3d();
+        Vector3d normal = new Vector3d();
+        Vector3d crossProduct = new Vector3d();
 
-            double lenSqr = normSquared(xprod);
-            if (lenSqr > maxSqr && pointBuffer[i] != vtx[0] && // paranoid
-                pointBuffer[i] != vtx[1])
+        double maxSqLen = 0;
+        vertexBuffer[1].point.sub(vertexBuffer[0].point, differenceA);
+        differenceA.normalize();
+        for (int i = 0; i < pointCount; i++)
+        {
+            pointBuffer[i].point.sub(vertexBuffer[0].point, differenceB);
+            differenceA.cross(differenceB, crossProduct);
+
+            double sqrLen = normSquared(crossProduct);
+            if (sqrLen > maxSqLen && pointBuffer[i] != vertexBuffer[0] && // paranoid
+                pointBuffer[i] != vertexBuffer[1])
             {
-                maxSqr = lenSqr;
-                vtx[2] = pointBuffer[i];
-                nrml.set(xprod);
+                maxSqLen = sqrLen;
+                vertexBuffer[2] = pointBuffer[i];
+                normal.set(crossProduct);
             }
         }
-        if (Math.sqrt(maxSqr) <= 100 * tolerance)
+        if (Math.sqrt(maxSqLen) <= 100 * tolerance)
         {
             throw new IllegalArgumentException("Input points appear to be collinear");
         }
-        nrml.normalize();
+        normal.normalize();
 
-        double maxDist = 0;
-        double d0 = vtx[2].pnt.dot(nrml);
-        for (int i = 0; i < numPoints; i++)
+        double maxDistance = 0;
+        double dotProduct = vertexBuffer[2].point.dot(normal);
+        for (int i = 0; i < pointCount; i++)
         {
-            double dist = Math.abs(pointBuffer[i].pnt.dot(nrml) - d0);
-            if (dist > maxDist && pointBuffer[i] != vtx[0] && // paranoid
-                pointBuffer[i] != vtx[1] && pointBuffer[i] != vtx[2])
+            double distance = Math.abs(pointBuffer[i].point.dot(normal) - dotProduct);
+            if (distance > maxDistance && pointBuffer[i] != vertexBuffer[0] && // paranoid
+                pointBuffer[i] != vertexBuffer[1] && pointBuffer[i] != vertexBuffer[2])
             {
-                maxDist = dist;
-                vtx[3] = pointBuffer[i];
+                maxDistance = distance;
+                vertexBuffer[3] = pointBuffer[i];
             }
         }
-        if (Math.abs(maxDist) <= 100 * tolerance)
+        if (Math.abs(maxDistance) <= 100 * tolerance)
         {
             throw new IllegalArgumentException("Input points appear to be coplanar");
         }
 
         LOG.debug("initial vertices:");
-        LOG.debug("{}: {}", vtx[0].index, vtx[0].pnt);
-        LOG.debug("{}: {}", vtx[1].index, vtx[1].pnt);
-        LOG.debug("{}: {}", vtx[2].index, vtx[2].pnt);
-        LOG.debug("{}: {}", vtx[3].index, vtx[3].pnt);
+        LOG.debug("{}: {}", vertexBuffer[0].index, vertexBuffer[0].point);
+        LOG.debug("{}: {}", vertexBuffer[1].index, vertexBuffer[1].point);
+        LOG.debug("{}: {}", vertexBuffer[2].index, vertexBuffer[2].point);
+        LOG.debug("{}: {}", vertexBuffer[3].index, vertexBuffer[3].point);
 
         Face[] tris = new Face[4];
 
-        if (vtx[3].pnt.dot(nrml) - d0 < 0)
+        if (vertexBuffer[3].point.dot(normal) - dotProduct < 0)
         {
-            tris[0] = Face.createTriangle(vtx[0], vtx[1], vtx[2]);
-            tris[1] = Face.createTriangle(vtx[3], vtx[1], vtx[0]);
-            tris[2] = Face.createTriangle(vtx[3], vtx[2], vtx[1]);
-            tris[3] = Face.createTriangle(vtx[3], vtx[0], vtx[2]);
+            tris[0] = Face.createTriangle(vertexBuffer[0], vertexBuffer[1], vertexBuffer[2]);
+            tris[1] = Face.createTriangle(vertexBuffer[3], vertexBuffer[1], vertexBuffer[0]);
+            tris[2] = Face.createTriangle(vertexBuffer[3], vertexBuffer[2], vertexBuffer[1]);
+            tris[3] = Face.createTriangle(vertexBuffer[3], vertexBuffer[0], vertexBuffer[2]);
 
             for (int i = 0; i < 3; i++)
             {
@@ -780,10 +777,10 @@ public class QuickHull3D
         }
         else
         {
-            tris[0] = Face.createTriangle(vtx[0], vtx[2], vtx[1]);
-            tris[1] = Face.createTriangle(vtx[3], vtx[0], vtx[1]);
-            tris[2] = Face.createTriangle(vtx[3], vtx[1], vtx[2]);
-            tris[3] = Face.createTriangle(vtx[3], vtx[2], vtx[0]);
+            tris[0] = Face.createTriangle(vertexBuffer[0], vertexBuffer[2], vertexBuffer[1]);
+            tris[1] = Face.createTriangle(vertexBuffer[3], vertexBuffer[0], vertexBuffer[1]);
+            tris[2] = Face.createTriangle(vertexBuffer[3], vertexBuffer[1], vertexBuffer[2]);
+            tris[3] = Face.createTriangle(vertexBuffer[3], vertexBuffer[2], vertexBuffer[0]);
 
             for (int i = 0; i < 3; i++)
             {
@@ -795,24 +792,24 @@ public class QuickHull3D
 
         faces.addAll(Arrays.asList(tris).subList(0, 4));
 
-        for (int i = 0; i < numPoints; i++)
+        for (int i = 0; i < pointCount; i++)
         {
             Vertex v = pointBuffer[i];
 
-            if (v == vtx[0] || v == vtx[1] || v == vtx[2] || v == vtx[3])
+            if (v == vertexBuffer[0] || v == vertexBuffer[1] || v == vertexBuffer[2] || v == vertexBuffer[3])
             {
                 continue;
             }
 
-            maxDist = tolerance;
+            maxDistance = tolerance;
             Face maxFace = null;
             for (int k = 0; k < 4; k++)
             {
-                double dist = tris[k].distanceToPlane(v.pnt);
-                if (dist > maxDist)
+                double dist = tris[k].distanceToPlane(v.point);
+                if (dist > maxDistance)
                 {
                     maxFace = tris[k];
-                    maxDist = dist;
+                    maxDistance = dist;
                 }
             }
             if (maxFace != null)
@@ -828,7 +825,7 @@ public class QuickHull3D
         boolean indexedFromOne = (flags & INDEXED_FROM_ONE) != 0;
         boolean pointRelative = (flags & POINT_RELATIVE) != 0;
 
-        HalfEdge hedge = face.he0;
+        HalfEdge hedge = face.firstEdge;
         int k = 0;
         do
         {
@@ -845,15 +842,15 @@ public class QuickHull3D
             hedge = (ccw
                 ? hedge.next
                 : hedge.prev);
-        } while (hedge != face.he0);
+        } while (hedge != face.firstEdge);
     }
 
     private void resolveUnclaimedPoints(FaceList newFaces)
     {
-        Vertex vtxNext = unclaimed.first();
-        for (Vertex vtx = vtxNext; vtx != null; vtx = vtxNext)
+        Vertex nextVertex = unclaimed.first();
+        for (Vertex vertex = nextVertex; vertex != null; vertex = nextVertex)
         {
-            vtxNext = vtx.next;
+            nextVertex = vertex.next;
 
             double maxDist = tolerance;
             Face maxFace = null;
@@ -861,7 +858,7 @@ public class QuickHull3D
             {
                 if (newFace.mark == Face.VISIBLE)
                 {
-                    double dist = newFace.distanceToPlane(vtx.pnt);
+                    double dist = newFace.distanceToPlane(vertex.point);
                     if (dist > maxDist)
                     {
                         maxDist = dist;
@@ -875,14 +872,14 @@ public class QuickHull3D
             }
             if (maxFace != null)
             {
-                addPointToFace(vtx, maxFace);
+                addPointToFace(vertex, maxFace);
                 LOG.debug("{} CLAIMED BY {}", NEGATIVE_INDEX, maxFace.getVertexString());
             }
             else
             {
-                if (vtx.index == NEGATIVE_INDEX)
+                if (vertex.index == NEGATIVE_INDEX)
                 {
-                    LOG.debug("{} DISCARDED", vtxNext);
+                    LOG.debug("{} DISCARDED", nextVertex);
                 }
             }
         }
@@ -890,91 +887,93 @@ public class QuickHull3D
 
     private void deleteFacePoints(Face face, Face absorbingFace)
     {
-        Vertex faceVtxs = removeAllPointsFromFace(face);
-        if (faceVtxs != null)
+        Vertex faceVertices = removeAllPointsFromFace(face);
+        if (faceVertices != null)
         {
             if (absorbingFace == null)
             {
-                unclaimed.addAll(faceVtxs);
+                unclaimed.addAll(faceVertices);
             }
             else
             {
-                Vertex vtxNext = faceVtxs;
-                for (Vertex vtx = vtxNext; vtx != null; vtx = vtxNext)
+                Vertex nextVertex = faceVertices;
+                for (Vertex vertex = nextVertex; vertex != null; vertex = nextVertex)
                 {
-                    vtxNext = vtx.next;
-                    double dist = absorbingFace.distanceToPlane(vtx.pnt);
+                    nextVertex = vertex.next;
+                    double dist = absorbingFace.distanceToPlane(vertex.point);
                     if (dist > tolerance)
                     {
-                        addPointToFace(vtx, absorbingFace);
+                        addPointToFace(vertex, absorbingFace);
                     }
                     else
                     {
-                        unclaimed.add(vtx);
+                        unclaimed.add(vertex);
                     }
                 }
             }
         }
     }
 
-    private double oppFaceDistance(HalfEdge he)
+    private double opposingFaceDistance(HalfEdge halfEdge)
     {
-        return he.face.distanceToPlane(he.opposite.face.getCentroid());
+        return halfEdge.face.distanceToPlane(halfEdge.opposite.face.getCentroid());
     }
 
     private boolean doAdjacentMerge(Face face, AdjacencyMergeType mergeType)
     {
-        HalfEdge hedge = face.he0;
+        HalfEdge hedge = face.firstEdge;
 
         boolean convex = true;
         do
         {
-            Face oppFace = hedge.oppositeFace();
+            Face oppositeFace = hedge.oppositeFace();
             boolean merge = false;
 
-            if (mergeType == AdjacencyMergeType.NON_CONVEX)
-            { // then merge faces if they are
-                // definitively non-convex
-                if (oppFaceDistance(hedge) > -tolerance || oppFaceDistance(hedge.opposite) > -tolerance)
-                {
-                    merge = true;
-                }
-            }
-            else
+            switch (mergeType)
             {
-                // mergeType == NONCONVEX_WRT_LARGER_FACE
-                // merge faces if they are parallel or non-convex
-                // wrt to the larger face; otherwise, just mark
-                // the face non-convex for the second pass.
-                if (face.area > oppFace.area)
-                {
-                    if (oppFaceDistance(hedge) > -tolerance)
+                case NON_CONVEX:
+                    // merge faces if they are definitively non-convex
+                    if (opposingFaceDistance(hedge) > -tolerance || opposingFaceDistance(hedge.opposite) > -tolerance)
                     {
                         merge = true;
                     }
-                    else if (oppFaceDistance(hedge.opposite) > -tolerance)
+                    break;
+
+                case NON_CONVEX_WRT_LARGER_FACE:
+                    // merge faces if they are parallel or non-convex wrt to the larger face;
+                    // otherwise, just mark the face non-convex for the second pass.
+                    assert oppositeFace != null;
+                    if (face.area > oppositeFace.area)
                     {
-                        convex = false;
+                        if (opposingFaceDistance(hedge) > -tolerance)
+                        {
+                            merge = true;
+                        }
+                        else if (opposingFaceDistance(hedge.opposite) > -tolerance)
+                        {
+                            convex = false;
+                        }
                     }
-                }
-                else
-                {
-                    if (oppFaceDistance(hedge.opposite) > -tolerance)
+                    else
                     {
-                        merge = true;
+                        if (opposingFaceDistance(hedge.opposite) > -tolerance)
+                        {
+                            merge = true;
+                        }
+                        else if (opposingFaceDistance(hedge) > -tolerance)
+                        {
+                            convex = false;
+                        }
                     }
-                    else if (oppFaceDistance(hedge) > -tolerance)
-                    {
-                        convex = false;
-                    }
-                }
+                    break;
             }
 
             if (merge)
             {
-                LOG.debug("  merging {}  and  {}", face.getVertexString(), oppFace.getVertexString());
-                int numd = face.mergeAdjacentFace(hedge, discardedFaces);
-                for (int i = 0; i < numd; i++)
+                assert oppositeFace != null;
+                LOG.debug("  merging {}  and  {}", face.getVertexString(), oppositeFace.getVertexString());
+                int numDiscarded = face.mergeAdjacentFace(hedge, discardedFaces);
+                for (int i = 0; i < numDiscarded; i++)
                 {
                     deleteFacePoints(discardedFaces[i], face);
                 }
@@ -982,7 +981,8 @@ public class QuickHull3D
                 return true;
             }
             hedge = hedge.next;
-        } while (hedge != face.he0);
+        } while (hedge != face.firstEdge);
+
         if (!convex)
         {
             face.mark = Face.NON_CONVEX;
@@ -992,7 +992,6 @@ public class QuickHull3D
 
     private void calculateHorizon(Vector3d eyePnt, HalfEdge edge0, Face face, List<HalfEdge> horizon)
     {
-        // oldFaces.add (face);
         deleteFacePoints(face, null);
         face.mark = Face.DELETED;
         LOG.debug("  visiting face {}", face.getVertexString());
@@ -1009,6 +1008,8 @@ public class QuickHull3D
         do
         {
             Face oppFace = edge.oppositeFace();
+            assert oppFace != null;
+
             if (oppFace.mark == Face.VISIBLE)
             {
                 if (oppFace.distanceToPlane(eyePnt) > tolerance)
@@ -1063,16 +1064,16 @@ public class QuickHull3D
     {
         if (!claimed.isEmpty())
         {
-            Face eyeFace = claimed.first().face;
             Vertex eyeVtx = null;
+            Face eyeFace = claimed.first().face;
             double maxDist = 0;
-            for (Vertex vtx = eyeFace.outside; vtx != null && vtx.face == eyeFace; vtx = vtx.next)
+            for (Vertex vertex = eyeFace.outside; vertex != null && vertex.face == eyeFace; vertex = vertex.next)
             {
-                double dist = eyeFace.distanceToPlane(vtx.pnt);
+                double dist = eyeFace.distanceToPlane(vertex.point);
                 if (dist > maxDist)
                 {
                     maxDist = dist;
-                    eyeVtx = vtx;
+                    eyeVtx = vertex;
                 }
             }
             return eyeVtx;
@@ -1089,10 +1090,10 @@ public class QuickHull3D
         unclaimed.clear();
 
         LOG.debug("Adding point: {}", eyeVtx.index);
-        LOG.debug(" which is {} above face {}", eyeVtx.face.distanceToPlane(eyeVtx.pnt), eyeVtx.face.getVertexString());
+        LOG.debug(" which is {} above face {}", eyeVtx.face.distanceToPlane(eyeVtx.point), eyeVtx.face.getVertexString());
 
         removePointFromFace(eyeVtx, eyeVtx.face);
-        calculateHorizon(eyeVtx.pnt, null, eyeVtx.face, horizon);
+        calculateHorizon(eyeVtx.point, null, eyeVtx.face, horizon);
         newFaces.clear();
         addNewFaces(newFaces, eyeVtx, horizon);
 
@@ -1122,18 +1123,18 @@ public class QuickHull3D
 
     private void markFaceVertices(Face face)
     {
-        HalfEdge he0 = face.getFirstEdge();
-        HalfEdge he = he0;
+        HalfEdge firstEdge = face.getFirstEdge();
+        HalfEdge currentEdge = firstEdge;
         do
         {
-            he.head().index = 0;
-            he = he.next;
-        } while (he != he0);
+            currentEdge.head().index = 0;
+            currentEdge = currentEdge.next;
+        } while (currentEdge != firstEdge);
     }
 
     private void reindexFacesAndVertices()
     {
-        for (int i = 0; i < numPoints; i++)
+        for (int i = 0; i < pointCount; i++)
         {
             pointBuffer[i].index = -1;
         }
@@ -1151,14 +1152,14 @@ public class QuickHull3D
             }
         }
         // reindex vertices
-        numVertices = 0;
-        for (int i = 0; i < numPoints; i++)
+        vertexCount = 0;
+        for (int i = 0; i < pointCount; i++)
         {
-            Vertex vtx = pointBuffer[i];
-            if (vtx.index == 0)
+            Vertex vertex = pointBuffer[i];
+            if (vertex.index == 0)
             {
-                vertexPointIndices[numVertices] = i;
-                vtx.index = numVertices++;
+                vertexPointIndices[vertexCount] = i;
+                vertex.index = vertexCount++;
             }
         }
     }
@@ -1166,12 +1167,12 @@ public class QuickHull3D
     private boolean checkFaceConvexity(Face face, double tol, PrintStream ps)
     {
         double dist;
-        HalfEdge he = face.he0;
+        HalfEdge he = face.firstEdge;
         do
         {
             face.checkConsistency();
             // make sure edge is convex
-            dist = oppFaceDistance(he);
+            dist = opposingFaceDistance(he);
             if (dist > tol)
             {
                 if (ps != null)
@@ -1180,7 +1181,7 @@ public class QuickHull3D
                 }
                 return false;
             }
-            dist = oppFaceDistance(he.opposite);
+            dist = opposingFaceDistance(he.opposite);
             if (dist > tol)
             {
                 if (ps != null)
@@ -1198,7 +1199,7 @@ public class QuickHull3D
                 return false;
             }
             he = he.next;
-        } while (he != face.he0);
+        } while (he != face.firstEdge);
         return true;
     }
 
@@ -1249,9 +1250,9 @@ public class QuickHull3D
 
         // check point inclusion
 
-        for (int i = 0; i < numPoints; i++)
+        for (int i = 0; i < pointCount; i++)
         {
-            Vector3d pnt = pointBuffer[i].pnt;
+            Vector3d pnt = pointBuffer[i].point;
             for (Face face : faces)
             {
                 if (face.mark == Face.VISIBLE)
@@ -1273,29 +1274,17 @@ public class QuickHull3D
 
     private double normSquared(Vector3d vector3d)
     {
-        return vector3d.x * vector3d.x + vector3d.y * vector3d.y + vector3d.z * vector3d.z;
+        return Math.fma(vector3d.x, vector3d.x, Math.fma(vector3d.y, vector3d.y, vector3d.z * vector3d.z));
     }
 
     private double getByIndex(Vector3d point3d, int i)
     {
-        switch (i)
+        return switch (i)
         {
-            case 0:
-            {
-                return point3d.x;
-            }
-            case 1:
-            {
-                return point3d.y;
-            }
-            case 2:
-            {
-                return point3d.z;
-            }
-            default:
-            {
-                throw new ArrayIndexOutOfBoundsException(i);
-            }
-        }
+            case 0 -> point3d.x;
+            case 1 -> point3d.y;
+            case 2 -> point3d.z;
+            default -> throw new ArrayIndexOutOfBoundsException(i);
+        };
     }
 }
