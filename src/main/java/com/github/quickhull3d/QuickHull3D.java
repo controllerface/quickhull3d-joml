@@ -337,7 +337,7 @@ public class QuickHull3D
         newFaces.clear();
         for (Face face : faces)
         {
-            if (face.mark == Face.VISIBLE)
+            if (face.state == Face.State.VISIBLE)
             {
                 face.triangulate(newFaces, minArea);
             }
@@ -825,24 +825,24 @@ public class QuickHull3D
         boolean indexedFromOne = (flags & INDEXED_FROM_ONE) != 0;
         boolean pointRelative = (flags & POINT_RELATIVE) != 0;
 
-        HalfEdge hedge = face.firstEdge;
-        int k = 0;
+        HalfEdge currentEdge = face.firstEdge;
+        int i = 0;
         do
         {
-            int idx = hedge.head().index;
+            int index = currentEdge.head().index;
             if (pointRelative)
             {
-                idx = vertexPointIndices[idx];
+                index = vertexPointIndices[index];
             }
             if (indexedFromOne)
             {
-                idx++;
+                index++;
             }
-            indices[k++] = idx;
-            hedge = (ccw
-                ? hedge.next
-                : hedge.prev);
-        } while (hedge != face.firstEdge);
+            indices[i++] = index;
+            currentEdge = (ccw
+                ? currentEdge.next
+                : currentEdge.prev);
+        } while (currentEdge != face.firstEdge);
     }
 
     private void resolveUnclaimedPoints(FaceList newFaces)
@@ -856,7 +856,7 @@ public class QuickHull3D
             Face maxFace = null;
             for (Face newFace = newFaces.first(); newFace != null; newFace = newFace.next)
             {
-                if (newFace.mark == Face.VISIBLE)
+                if (newFace.state == Face.State.VISIBLE)
                 {
                     double dist = newFace.distanceToPlane(vertex.point);
                     if (dist > maxDist)
@@ -873,7 +873,7 @@ public class QuickHull3D
             if (maxFace != null)
             {
                 addPointToFace(vertex, maxFace);
-                LOG.debug("{} CLAIMED BY {}", NEGATIVE_INDEX, maxFace.getVertexString());
+                LOG.debug("{} CLAIMED BY {}", NEGATIVE_INDEX, maxFace.toString());
             }
             else
             {
@@ -921,71 +921,73 @@ public class QuickHull3D
 
     private boolean doAdjacentMerge(Face face, AdjacencyMergeType mergeType)
     {
-        HalfEdge hedge = face.firstEdge;
+        HalfEdge currentEdge = face.firstEdge;
 
         boolean convex = true;
         do
         {
-            Face oppositeFace = hedge.oppositeFace();
+            Face oppositeFace = currentEdge.oppositeFace();
             boolean merge = false;
 
             switch (mergeType)
             {
-                case NON_CONVEX:
-                    // merge faces if they are definitively non-convex
-                    if (opposingFaceDistance(hedge) > -tolerance || opposingFaceDistance(hedge.opposite) > -tolerance)
+                // merge faces if they are definitively non-convex
+                case NON_CONVEX ->
+                {
+                    if (opposingFaceDistance(currentEdge) > -tolerance || opposingFaceDistance(currentEdge.opposite) > -tolerance)
                     {
                         merge = true;
                     }
-                    break;
+                }
 
-                case NON_CONVEX_WRT_LARGER_FACE:
-                    // merge faces if they are parallel or non-convex wrt to the larger face;
-                    // otherwise, just mark the face non-convex for the second pass.
+                // merge faces if they are parallel or non-convex wrt to the larger face;
+                // otherwise, just mark the face non-convex for the second pass.
+                case NON_CONVEX_WRT_LARGER_FACE ->
+                {
                     assert oppositeFace != null;
                     if (face.area > oppositeFace.area)
                     {
-                        if (opposingFaceDistance(hedge) > -tolerance)
+                        if (opposingFaceDistance(currentEdge) > -tolerance)
                         {
                             merge = true;
                         }
-                        else if (opposingFaceDistance(hedge.opposite) > -tolerance)
+                        else if (opposingFaceDistance(currentEdge.opposite) > -tolerance)
                         {
                             convex = false;
                         }
                     }
                     else
                     {
-                        if (opposingFaceDistance(hedge.opposite) > -tolerance)
+                        if (opposingFaceDistance(currentEdge.opposite) > -tolerance)
                         {
                             merge = true;
                         }
-                        else if (opposingFaceDistance(hedge) > -tolerance)
+                        else if (opposingFaceDistance(currentEdge) > -tolerance)
                         {
                             convex = false;
                         }
                     }
-                    break;
+                }
             }
 
             if (merge)
             {
                 assert oppositeFace != null;
-                LOG.debug("  merging {}  and  {}", face.getVertexString(), oppositeFace.getVertexString());
-                int numDiscarded = face.mergeAdjacentFace(hedge, discardedFaces);
+                LOG.debug("  merging {}  and  {}", face.toString(), oppositeFace.toString());
+                int numDiscarded = face.mergeAdjacentFace(currentEdge, discardedFaces);
                 for (int i = 0; i < numDiscarded; i++)
                 {
                     deleteFacePoints(discardedFaces[i], face);
                 }
-                LOG.debug("  result: {}", face.getVertexString());
+                LOG.debug("  result: {}", face.toString());
                 return true;
             }
-            hedge = hedge.next;
-        } while (hedge != face.firstEdge);
+            currentEdge = currentEdge.next;
+        } while (currentEdge != face.firstEdge);
 
         if (!convex)
         {
-            face.mark = Face.NON_CONVEX;
+            face.state = Face.State.NON_CONVEX;
         }
         return false;
     }
@@ -993,8 +995,8 @@ public class QuickHull3D
     private void calculateHorizon(Vector3d eyePnt, HalfEdge edge0, Face face, List<HalfEdge> horizon)
     {
         deleteFacePoints(face, null);
-        face.mark = Face.DELETED;
-        LOG.debug("  visiting face {}", face.getVertexString());
+        face.state = Face.State.DELETED;
+        LOG.debug("  visiting face {}", face.toString());
         HalfEdge edge;
         if (edge0 == null)
         {
@@ -1010,7 +1012,7 @@ public class QuickHull3D
             Face oppFace = edge.oppositeFace();
             assert oppFace != null;
 
-            if (oppFace.mark == Face.VISIBLE)
+            if (oppFace.state == Face.State.VISIBLE)
             {
                 if (oppFace.distanceToPlane(eyePnt) > tolerance)
                 {
@@ -1026,57 +1028,57 @@ public class QuickHull3D
         } while (edge != edge0);
     }
 
-    private HalfEdge addAdjoiningFace(Vertex eyeVtx, HalfEdge he)
+    private HalfEdge addAdjoiningFace(Vertex eyeVertex, HalfEdge edge)
     {
-        Face face = Face.createTriangle(eyeVtx, he.tail(), he.head());
+        Face face = Face.createTriangle(eyeVertex, edge.tail(), edge.head());
         faces.add(face);
-        face.getEdge(-1).setOpposite(he.getOpposite());
+        face.getEdge(-1).setOpposite(edge.getOpposite());
         return face.getEdge(0);
     }
 
-    private void addNewFaces(FaceList newFaces, Vertex eyeVtx, List<HalfEdge> horizon)
+    private void addNewFaces(FaceList newFaces, Vertex eyeVertex, List<HalfEdge> horizon)
     {
         newFaces.clear();
 
-        HalfEdge hedgeSidePrev = null;
-        HalfEdge hedgeSideBegin = null;
+        HalfEdge prevSideEdge = null;
+        HalfEdge firstSideEdge = null;
 
-        for (HalfEdge object : horizon)
+        for (HalfEdge horizonEdge : horizon)
         {
-            HalfEdge hedgeSide = addAdjoiningFace(eyeVtx, object);
-            LOG.debug("new face: {}", hedgeSide.face.getVertexString());
-            if (hedgeSidePrev != null)
+            HalfEdge sideEdge = addAdjoiningFace(eyeVertex, horizonEdge);
+            LOG.debug("new face: {}", sideEdge.face.toString());
+            if (prevSideEdge != null)
             {
-                hedgeSide.next.setOpposite(hedgeSidePrev);
+                sideEdge.next.setOpposite(prevSideEdge);
             }
             else
             {
-                hedgeSideBegin = hedgeSide;
+                firstSideEdge = sideEdge;
             }
-            newFaces.add(hedgeSide.getFace());
-            hedgeSidePrev = hedgeSide;
+            newFaces.add(sideEdge.getFace());
+            prevSideEdge = sideEdge;
         }
-        assert hedgeSideBegin != null;
-        hedgeSideBegin.next.setOpposite(hedgeSidePrev);
+        assert firstSideEdge != null;
+        firstSideEdge.next.setOpposite(prevSideEdge);
     }
 
     private Vertex nextPointToAdd()
     {
         if (!claimed.isEmpty())
         {
-            Vertex eyeVtx = null;
+            Vertex eyeVertex = null;
             Face eyeFace = claimed.first().face;
-            double maxDist = 0;
+            double maxDistance = 0;
             for (Vertex vertex = eyeFace.outside; vertex != null && vertex.face == eyeFace; vertex = vertex.next)
             {
-                double dist = eyeFace.distanceToPlane(vertex.point);
-                if (dist > maxDist)
+                double distance = eyeFace.distanceToPlane(vertex.point);
+                if (distance > maxDistance)
                 {
-                    maxDist = dist;
-                    eyeVtx = vertex;
+                    maxDistance = distance;
+                    eyeVertex = vertex;
                 }
             }
-            return eyeVtx;
+            return eyeVertex;
         }
         else
         {
@@ -1084,24 +1086,24 @@ public class QuickHull3D
         }
     }
 
-    private void addPointToHull(Vertex eyeVtx)
+    private void addPointToHull(Vertex eyeVertex)
     {
         horizon.clear();
         unclaimed.clear();
 
-        LOG.debug("Adding point: {}", eyeVtx.index);
-        LOG.debug(" which is {} above face {}", eyeVtx.face.distanceToPlane(eyeVtx.point), eyeVtx.face.getVertexString());
+        LOG.debug("Adding point: {}", eyeVertex.index);
+        LOG.debug(" which is {} above face {}", eyeVertex.face.distanceToPlane(eyeVertex.point), eyeVertex.face.toString());
 
-        removePointFromFace(eyeVtx, eyeVtx.face);
-        calculateHorizon(eyeVtx.point, null, eyeVtx.face, horizon);
+        removePointFromFace(eyeVertex, eyeVertex.face);
+        calculateHorizon(eyeVertex.point, null, eyeVertex.face, horizon);
         newFaces.clear();
-        addNewFaces(newFaces, eyeVtx, horizon);
+        addNewFaces(newFaces, eyeVertex, horizon);
 
         // first merge pass ... merge faces which are non-convex
         // as determined by the larger face
         for (Face face = newFaces.first(); face != null; face = face.next)
         {
-            if (face.mark == Face.VISIBLE)
+            if (face.state == Face.State.VISIBLE)
             {
                 while (doAdjacentMerge(face, AdjacencyMergeType.NON_CONVEX_WRT_LARGER_FACE))
                     ;
@@ -1111,9 +1113,9 @@ public class QuickHull3D
         // wrt either face
         for (Face face = newFaces.first(); face != null; face = face.next)
         {
-            if (face.mark == Face.NON_CONVEX)
+            if (face.state == Face.State.NON_CONVEX)
             {
-                face.mark = Face.VISIBLE;
+                face.state = Face.State.VISIBLE;
                 while (doAdjacentMerge(face, AdjacencyMergeType.NON_CONVEX))
                     ;
             }
@@ -1142,7 +1144,7 @@ public class QuickHull3D
         for (Iterator<Face> it = faces.iterator(); it.hasNext(); )
         {
             Face face = it.next();
-            if (face.mark != Face.VISIBLE)
+            if (face.state != Face.State.VISIBLE)
             {
                 it.remove();
             }
@@ -1194,7 +1196,7 @@ public class QuickHull3D
             {
                 if (ps != null)
                 {
-                    ps.println("Redundant vertex " + he.head().index + " in face " + face.getVertexString());
+                    ps.println("Redundant vertex " + he.head().index + " in face " + face.toString());
                 }
                 return false;
             }
@@ -1209,7 +1211,7 @@ public class QuickHull3D
         boolean convex = true;
         for (Face face : faces)
         {
-            if (face.mark == Face.VISIBLE && !checkFaceConvexity(face, tol, ps))
+            if (face.state == Face.State.VISIBLE && !checkFaceConvexity(face, tol, ps))
             {
                 convex = false;
             }
@@ -1255,14 +1257,14 @@ public class QuickHull3D
             Vector3d pnt = pointBuffer[i].point;
             for (Face face : faces)
             {
-                if (face.mark == Face.VISIBLE)
+                if (face.state == Face.State.VISIBLE)
                 {
                     dist = face.distanceToPlane(pnt);
                     if (dist > pointTol)
                     {
                         if (ps != null)
                         {
-                            ps.println("Point " + i + " " + dist + " above face " + face.getVertexString());
+                            ps.println("Point " + i + " " + dist + " above face " + face.toString());
                         }
                         return false;
                     }

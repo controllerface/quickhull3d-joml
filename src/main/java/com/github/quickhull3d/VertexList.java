@@ -35,7 +35,6 @@ package com.github.quickhull3d;
 final class VertexList
 {
     private Vertex head;
-
     private Vertex tail;
 
     /**
@@ -49,104 +48,107 @@ final class VertexList
     /**
      * Adds a vertex to the end of this list.
      */
-    public void add(Vertex vtx)
+    public void add(Vertex vertex)
     {
         if (head == null)
         {
-            head = vtx;
+            head = vertex;
         }
         else
         {
-            tail.next = vtx;
+            tail.next = vertex;
         }
-        vtx.prev = tail;
-        vtx.next = null;
-        tail = vtx;
+        vertex.prev = tail;
+        vertex.next = null;
+        tail = vertex;
     }
 
     /**
      * Adds a chain of vertices to the end of this list.
      */
-    public void addAll(Vertex vtx)
+    public void addAll(Vertex vertex)
     {
         if (head == null)
         {
-            head = vtx;
+            head = vertex;
         }
         else
         {
-            tail.next = vtx;
+            tail.next = vertex;
         }
-        vtx.prev = tail;
-        while (vtx.next != null)
+        vertex.prev = tail;
+        while (vertex.next != null)
         {
-            vtx = vtx.next;
+            vertex = vertex.next;
         }
-        tail = vtx;
+        tail = vertex;
     }
 
     /**
      * Deletes a vertex from this list.
      */
-    public void delete(Vertex vtx)
+    public void delete(Vertex vertex)
     {
-        if (vtx.prev == null)
+        if (vertex.prev == null)
         {
-            head = vtx.next;
+            head = vertex.next;
         }
         else
         {
-            vtx.prev.next = vtx.next;
+            vertex.prev.next = vertex.next;
         }
-        if (vtx.next == null)
+        if (vertex.next == null)
         {
-            tail = vtx.prev;
+            tail = vertex.prev;
         }
         else
         {
-            vtx.next.prev = vtx.prev;
+            vertex.next.prev = vertex.prev;
         }
     }
 
     /**
      * Deletes a chain of vertices from this list.
      */
-    public void delete(Vertex vtx1, Vertex vtx2)
+    public void delete(Vertex vertex1, Vertex vertex2)
     {
-        if (vtx1.prev == null)
+        if (vertex1.prev == null)
         {
-            head = vtx2.next;
+            head = vertex2.next;
         }
         else
         {
-            vtx1.prev.next = vtx2.next;
+            vertex1.prev.next = vertex2.next;
         }
-        if (vtx2.next == null)
+        if (vertex2.next == null)
         {
-            tail = vtx1.prev;
+            tail = vertex1.prev;
         }
         else
         {
-            vtx2.next.prev = vtx1.prev;
+            vertex2.next.prev = vertex1.prev;
         }
     }
 
     /**
-     * Inserts a vertex into this list before another specificed vertex.
+     * Inserts a vertex into this list before another specified vertex.
+     *
+     * @param toInsert The new vertex to be inserted into the list.
+     * @param insertBefore The existing vertex before which the new vertex will be inserted.
      */
-    public void insertBefore(Vertex vtx, Vertex next)
+    public void insertBefore(Vertex toInsert, Vertex insertBefore)
     {
-        vtx.prev = next.prev;
-        if (next.prev == null)
+        toInsert.prev = insertBefore.prev;
+        if (insertBefore.prev == null)
         {
-            head = vtx;
+            head = toInsert;
         }
         else
         {
-            next.prev.next = vtx;
+            insertBefore.prev.next = toInsert;
         }
-        vtx.next = next;
-        next.prev = vtx;
+        toInsert.next = insertBefore;
+        insertBefore.prev = toInsert;
     }
 
     /**

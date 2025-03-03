@@ -42,7 +42,7 @@ final class Vertex
     /**
      * Spatial point associated with this vertex.
      */
-    Vector3d point;
+    final Vector3d point;
 
     /**
      * Back index into an array.

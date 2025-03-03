@@ -185,4 +185,21 @@ final class HalfEdge
             return -1;
         }
     }
+
+    /**
+     * Returns the length of this half-edge.
+     *
+     * @return half-edge length
+     */
+    public double length()
+    {
+        if (tail() != null)
+        {
+            return head().point.distance(tail().point);
+        }
+        else
+        {
+            return -1;
+        }
+    }
 }

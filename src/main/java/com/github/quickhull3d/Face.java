@@ -42,33 +42,28 @@ import org.joml.Vector3d;
  */
 final class Face
 {
-    public static final int DELETED = 3;
-
-    public static final int NON_CONVEX = 2;
-
-    public static final int VISIBLE = 1;
-
     private final Vector3d centroid = new Vector3d();
-
     private final Vector3d normal = new Vector3d();
 
-    int mark;
-
     int vertexCount;
-
     double area;
-
     double planeOffset;
 
+    State state;
     HalfEdge firstEdge;
-
     Face next;
-
     Vertex outside;
+
+    public enum State
+    {
+        VISIBLE,
+        NON_CONVEX,
+        DELETED,
+    }
 
     public Face()
     {
-        mark = VISIBLE;
+        state = State.VISIBLE;
     }
 
     public static Face createTriangle(Vertex vertex0, Vertex vertex1, Vertex vertex2)
@@ -77,7 +72,7 @@ final class Face
     }
 
     /**
-     * Constructs a triangle Face from vertices v0, v1, and v2.
+     * Constructs a triangle Face from three vertices.
      *
      * @param vertex0 first vertex
      * @param vertex1 second vertex
@@ -118,36 +113,36 @@ final class Face
 
     public void computeNormal(Vector3d normal)
     {
-        HalfEdge edge1 = firstEdge.next;
-        HalfEdge edge2 = edge1.next;
+        HalfEdge referenceEdge = firstEdge.next;
+        HalfEdge currentEdge = referenceEdge.next;
 
-        Vector3d point0 = firstEdge.head().point;
-        Vector3d point2 = edge1.head().point;
+        Vector3d referencePoint = firstEdge.head().point;
+        Vector3d currentPoint = referenceEdge.head().point;
 
-        double deltaX = point2.x - point0.x;
-        double deltaY = point2.y - point0.y;
-        double deltaZ = point2.z - point0.z;
+        double currentEdgeX = currentPoint.x - referencePoint.x;
+        double currentEdgeY = currentPoint.y - referencePoint.y;
+        double currentEdgeZ = currentPoint.z - referencePoint.z;
 
         normal.set(0);
 
         vertexCount = 2;
 
-        while (edge2 != firstEdge)
+        while (currentEdge != firstEdge)
         {
-            double d1x = deltaX;
-            double d1y = deltaY;
-            double d1z = deltaZ;
+            double previousEdgeX = currentEdgeX;
+            double previousEdgeY = currentEdgeY;
+            double previousEdgeZ = currentEdgeZ;
 
-            point2 = edge2.head().point;
-            deltaX = point2.x - point0.x;
-            deltaY = point2.y - point0.y;
-            deltaZ = point2.z - point0.z;
+            currentPoint = currentEdge.head().point;
+            currentEdgeX = currentPoint.x - referencePoint.x;
+            currentEdgeY = currentPoint.y - referencePoint.y;
+            currentEdgeZ = currentPoint.z - referencePoint.z;
 
-            normal.x += d1y * deltaZ - d1z * deltaY;
-            normal.y += d1z * deltaX - d1x * deltaZ;
-            normal.z += d1x * deltaY - d1y * deltaX;
+            normal.x += previousEdgeY * currentEdgeZ - previousEdgeZ * currentEdgeY;
+            normal.y += previousEdgeZ * currentEdgeX - previousEdgeX * currentEdgeZ;
+            normal.z += previousEdgeX * currentEdgeY - previousEdgeY * currentEdgeX;
 
-            edge2 = edge2.next;
+            currentEdge = currentEdge.next;
             vertexCount++;
         }
         area = norm(normal);
@@ -163,35 +158,34 @@ final class Face
             // make the normal more robust by removing
             // components parallel to the longest edge
 
-            HalfEdge hedgeMax = null;
-            double lenSqrMax = 0;
-            HalfEdge hedge = firstEdge;
+            HalfEdge longestEdge = null;
+            double longestEdgeLenSq = 0;
+            HalfEdge currentEdge = firstEdge;
             do
             {
-                double lenSqr = hedge.lengthSquared();
-                if (lenSqr > lenSqrMax)
+                double currentEdgeLenSq = currentEdge.lengthSquared();
+                if (currentEdgeLenSq > longestEdgeLenSq)
                 {
-                    hedgeMax = hedge;
-                    lenSqrMax = lenSqr;
+                    longestEdge = currentEdge;
+                    longestEdgeLenSq = currentEdgeLenSq;
                 }
-                hedge = hedge.next;
-            } while (hedge != firstEdge);
+                currentEdge = currentEdge.next;
+            } while (currentEdge != firstEdge);
 
-            assert hedgeMax != null;
-            assert hedgeMax.head() != null;
-            assert hedgeMax.tail() != null;
+            assert longestEdge != null;
+            assert longestEdge.head() != null;
+            assert longestEdge.tail() != null;
 
-            Vector3d p2 = hedgeMax.head().point;
-            Vector3d p1 = hedgeMax.tail().point;
-            double lenMax = Math.sqrt(lenSqrMax);
-            double ux = (p2.x - p1.x) / lenMax;
-            double uy = (p2.y - p1.y) / lenMax;
-            double uz = (p2.z - p1.z) / lenMax;
-            double dot = normal.x * ux + normal.y * uy + normal.z * uz;
-            normal.x -= dot * ux;
-            normal.y -= dot * uy;
-            normal.z -= dot * uz;
+            Vector3d headPoint = longestEdge.head().point;
+            Vector3d tailPoint = longestEdge.tail().point;
 
+            double longestEdgeLen = currentEdge.length();
+            double unitX = (headPoint.x - tailPoint.x) / longestEdgeLen;
+            double unitY = (headPoint.y - tailPoint.y) / longestEdgeLen;
+            double unitZ = (headPoint.z - tailPoint.z) / longestEdgeLen;
+            double parallelComponent = normal.dot(unitX, unitY, unitZ);
+
+            normal.sub(parallelComponent * unitX, parallelComponent * unitY, parallelComponent * unitZ);
             normal.normalize();
         }
     }
@@ -213,49 +207,37 @@ final class Face
     }
 
     /**
-     * Gets the i-th half-edge associated with the face.
+     * Gets the i-th half-edge associated with the face, with iteration order defined as recursively
+     * referencing the {@linkplain HalfEdge#next} property of the current edge being iterated. Negative
+     * indices work backward, recursively referencing {@linkplain HalfEdge#prev} instead. Index `0` will
+     * return the result of {@linkplain Face#getFirstEdge()}.
+     * This method is only well-defined for faces that represent a triangle, with indices being in the
+     * range [-2, 2]. Index arguments outside this range may result in undefined behavior.
      *
-     * @param i the half-edge index, in the range 0-2.
+     * @param i the half-edge index, in the range [-2, 2].
      * @return the half-edge
      */
     public HalfEdge getEdge(int i)
     {
-        HalfEdge he = firstEdge;
+        assert i >= -2 && i <= 2 : "edge index" + i + " is out of range [-2, 2]";
+
+        HalfEdge currentEdge = firstEdge;
         while (i > 0)
         {
-            he = he.next;
+            currentEdge = currentEdge.next;
             i--;
         }
         while (i < 0)
         {
-            he = he.prev;
+            currentEdge = currentEdge.prev;
             i++;
         }
-        return he;
+        return currentEdge;
     }
 
     public HalfEdge getFirstEdge()
     {
         return firstEdge;
-    }
-
-    public String getVertexString()
-    {
-        StringBuilder buffer = null;
-        HalfEdge currentEdge = firstEdge;
-        do
-        {
-            if (buffer == null)
-            {
-                buffer = new StringBuilder("" + currentEdge.head().index);
-            }
-            else
-            {
-                buffer.append(" ").append(currentEdge.head().index);
-            }
-            currentEdge = currentEdge.next;
-        } while (currentEdge != firstEdge);
-        return buffer.toString();
     }
 
     public int mergeAdjacentFace(HalfEdge adjacentEdge, Face[] discarded)
@@ -266,7 +248,7 @@ final class Face
         int discardCount = 0;
 
         discarded[discardCount++] = oppositeFace;
-        oppositeFace.mark = DELETED;
+        oppositeFace.state = State.DELETED;
 
         HalfEdge oppositeEdge = adjacentEdge.getOpposite();
 
@@ -377,16 +359,16 @@ final class Face
         computeCentroid(centroid);
         planeOffset = normal.dot(centroid);
         int vertices = 0;
-        HalfEdge he = firstEdge;
+        HalfEdge nextEdge = firstEdge;
         do
         {
             vertices++;
-            he = he.next;
-        } while (he != firstEdge);
+            nextEdge = nextEdge.next;
+        } while (nextEdge != firstEdge);
 
         if (vertices != vertexCount)
         {
-            throw new HullGenerationException("face " + getVertexString() + " numVerts=" + vertexCount + " should be " + vertices);
+            throw new HullGenerationException("face " + this + " vertexCount=" + vertexCount + " should be " + vertices);
         }
     }
 
@@ -412,18 +394,15 @@ final class Face
             }
 
             assert oppositeFace != null;
-            if (oppositeFace.vertexCount() == 3)
-            { // then we can get rid of the
-                // opposite face altogether
+            if (oppositeFace.vertexCount() == 3) // then we can get rid of the opposite face altogether
+            {
                 oppositeEdge = edge.getOpposite().prev.getOpposite();
-
-                oppositeFace.mark = DELETED;
+                oppositeFace.state = State.DELETED;
                 discardedFace = oppositeFace;
             }
             else
             {
                 oppositeEdge = edge.getOpposite().next;
-
                 if (oppositeFace.firstEdge == oppositeEdge.prev)
                 {
                     oppositeFace.firstEdge = oppositeEdge;
@@ -448,46 +427,46 @@ final class Face
         return discardedFace;
     }
 
-    void checkConsistency()
+    public void checkConsistency()
     {
         // do a sanity check on the face
         HalfEdge currentEdge = firstEdge;
-        double maxd = 0;
+        double maxDistance = 0;
         int vertices = 0;
 
         if (vertexCount < 3)
         {
-            throw new HullGenerationException("degenerate face: " + getVertexString());
+            throw new HullGenerationException("degenerate face: " + this);
         }
         do
         {
-            HalfEdge hedgeOpp = currentEdge.getOpposite();
-            if (hedgeOpp == null)
+            HalfEdge oppositeEdge = currentEdge.getOpposite();
+            if (oppositeEdge == null)
             {
-                throw new HullGenerationException("face " + getVertexString() + ": " + "unreflected half edge " + currentEdge.getVertexString());
+                throw new HullGenerationException("face " + this + ": " + "unreflected half edge " + currentEdge.getVertexString());
             }
-            else if (hedgeOpp.getOpposite() != currentEdge)
+            else if (oppositeEdge.getOpposite() != currentEdge)
             {
-                throw new HullGenerationException("face " + getVertexString() + ": " + "opposite half edge " + hedgeOpp.getVertexString() + " has opposite "
-                    + hedgeOpp.getOpposite().getVertexString());
+                throw new HullGenerationException("face " + this + ": " + "opposite half edge " + oppositeEdge.getVertexString() + " has opposite "
+                    + oppositeEdge.getOpposite().getVertexString());
             }
-            if (hedgeOpp.head() != currentEdge.tail() || currentEdge.head() != hedgeOpp.tail())
+            if (oppositeEdge.head() != currentEdge.tail() || currentEdge.head() != oppositeEdge.tail())
             {
-                throw new HullGenerationException("face " + getVertexString() + ": " + "half edge " + currentEdge.getVertexString() + " reflected by " + hedgeOpp.getVertexString());
+                throw new HullGenerationException("face " + this + ": " + "half edge " + currentEdge.getVertexString() + " reflected by " + oppositeEdge.getVertexString());
             }
-            Face oppFace = hedgeOpp.face;
-            if (oppFace == null)
+            Face oppositeFace = oppositeEdge.face;
+            if (oppositeFace == null)
             {
-                throw new HullGenerationException("face " + getVertexString() + ": " + "no face on half edge " + hedgeOpp.getVertexString());
+                throw new HullGenerationException("face " + this + ": " + "no face on half edge " + oppositeEdge.getVertexString());
             }
-            else if (oppFace.mark == DELETED)
+            else if (oppositeFace.state == State.DELETED)
             {
-                throw new HullGenerationException("face " + getVertexString() + ": " + "opposite face " + oppFace.getVertexString() + " not on hull");
+                throw new HullGenerationException("face " + this + ": " + "opposite face " + oppositeFace + " not on hull");
             }
             double d = Math.abs(distanceToPlane(currentEdge.head().point));
-            if (d > maxd)
+            if (d > maxDistance)
             {
-                maxd = d;
+                maxDistance = d;
             }
             vertices++;
             currentEdge = currentEdge.next;
@@ -495,12 +474,32 @@ final class Face
 
         if (vertices != vertexCount)
         {
-            throw new HullGenerationException("face " + getVertexString() + " numVerts=" + vertexCount + " should be " + vertices);
+            throw new HullGenerationException("face " + this + " vertexCount=" + vertexCount + " should be " + vertices);
         }
     }
 
-    public double norm(Vector3d vector3d)
+    private double norm(Vector3d vector3d)
     {
         return Math.sqrt(vector3d.x * vector3d.x + vector3d.y * vector3d.y + vector3d.z * vector3d.z);
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder buffer = null;
+        HalfEdge currentEdge = firstEdge;
+        do
+        {
+            if (buffer == null)
+            {
+                buffer = new StringBuilder("" + currentEdge.head().index);
+            }
+            else
+            {
+                buffer.append(" ").append(currentEdge.head().index);
+            }
+            currentEdge = currentEdge.next;
+        } while (currentEdge != firstEdge);
+        return buffer.toString();
     }
 }
