@@ -30,8 +30,8 @@ package com.github.quickhull3d;
  */
 
 import org.joml.Vector3d;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestConvexHull {
 
@@ -107,7 +107,7 @@ public class TestConvexHull {
         System.out.println("Vertices:");
         Vector3d[] vertices = convexHull.getDoubleVertices();
 
-        Assert.assertEquals(expected.length, vertices.length);
+        Assertions.assertEquals(expected.length, vertices.length);
         for (int i = 0; i < vertices.length; i++) {
             Vector3d pnt = vertices[i];
             System.out.println(pnt.x + " " + pnt.y + " " + pnt.z);
@@ -118,8 +118,7 @@ public class TestConvexHull {
                     found = true;
                 }
             }
-            Assert.assertTrue(found);
+            Assertions.assertTrue(found);
         }
-
     }
 }

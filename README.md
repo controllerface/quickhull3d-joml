@@ -15,6 +15,7 @@ See the maven project site here: [quickhull3d](http://quickhull3d.github.io/quic
 
 ### Changes made in this fork
 
+- Migrated build system from Maven to Gradle
 - JDK version in use was bumped up to `23`
 - Several `assert`s were added to ensure program correctness for debugging purposes
 - Cases where mutually exclusive `int` values were used for state were replaced with `enum` classes

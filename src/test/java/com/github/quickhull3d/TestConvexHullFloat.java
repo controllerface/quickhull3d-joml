@@ -30,8 +30,8 @@ package com.github.quickhull3d;
  */
 
 import org.joml.Vector3f;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestConvexHullFloat
 {
@@ -108,7 +108,7 @@ public class TestConvexHullFloat
         System.out.println("Vertices:");
         Vector3f[] vertices = covexHull.getFloatVertices();
 
-        Assert.assertEquals(expected.length, vertices.length);
+        Assertions.assertEquals(expected.length, vertices.length);
         for (int i = 0; i < vertices.length; i++) {
             Vector3f pnt = vertices[i];
             System.out.println(pnt.x + " " + pnt.y + " " + pnt.z);
@@ -119,8 +119,7 @@ public class TestConvexHullFloat
                     found = true;
                 }
             }
-            Assert.assertTrue(found);
+            Assertions.assertTrue(found);
         }
-
     }
 }

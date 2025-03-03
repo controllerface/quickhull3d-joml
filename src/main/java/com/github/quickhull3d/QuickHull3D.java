@@ -34,8 +34,6 @@ import java.util.*;
 
 import org.joml.Vector3d;
 import org.joml.Vector3f;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Computes the convex hull of a set of three-dimensional points.
@@ -126,11 +124,6 @@ import org.slf4j.LoggerFactory;
 public class QuickHull3D
 {
     /**
-     * Logger to log to.
-     */
-    private static final Logger LOG = LoggerFactory.getLogger(QuickHull3D.class);
-
-    /**
      * Specifies that (on output) vertex indices for a face should be listed in
      * clockwise order.
      */
@@ -163,8 +156,6 @@ public class QuickHull3D
      * Precision of a float.
      */
     private static final float FLOAT_PREC = 1.1920929e-7f;
-
-    private static final int NEGATIVE_INDEX = -1;
 
     // estimated size of the point set
     private double charLength;
@@ -459,7 +450,6 @@ public class QuickHull3D
 
     private void buildHull()
     {
-        int pointCount = 0;
         Vertex eyeVertex;
 
         computeMaxAndMin();
@@ -467,11 +457,8 @@ public class QuickHull3D
         while ((eyeVertex = nextPointToAdd()) != null)
         {
             addPointToHull(eyeVertex);
-            pointCount++;
-            LOG.debug("iteration {} done", pointCount);
         }
         reindexFacesAndVertices();
-        LOG.debug("hull done");
     }
 
     private void build(double[] coords, int pointCount) throws IllegalArgumentException
@@ -753,12 +740,6 @@ public class QuickHull3D
             throw new IllegalArgumentException("Input points appear to be coplanar");
         }
 
-        LOG.debug("initial vertices:");
-        LOG.debug("{}: {}", vertexBuffer[0].index, vertexBuffer[0].point);
-        LOG.debug("{}: {}", vertexBuffer[1].index, vertexBuffer[1].point);
-        LOG.debug("{}: {}", vertexBuffer[2].index, vertexBuffer[2].point);
-        LOG.debug("{}: {}", vertexBuffer[3].index, vertexBuffer[3].point);
-
         Face[] tris = new Face[4];
 
         if (vertexBuffer[3].point.dot(normal) - dotProduct < 0)
@@ -873,14 +854,6 @@ public class QuickHull3D
             if (maxFace != null)
             {
                 addPointToFace(vertex, maxFace);
-                LOG.debug("{} CLAIMED BY {}", NEGATIVE_INDEX, maxFace.toString());
-            }
-            else
-            {
-                if (vertex.index == NEGATIVE_INDEX)
-                {
-                    LOG.debug("{} DISCARDED", nextVertex);
-                }
             }
         }
     }
@@ -973,13 +946,11 @@ public class QuickHull3D
             if (merge)
             {
                 assert oppositeFace != null;
-                LOG.debug("  merging {}  and  {}", face.toString(), oppositeFace.toString());
                 int numDiscarded = face.mergeAdjacentFace(currentEdge, discardedFaces);
                 for (int i = 0; i < numDiscarded; i++)
                 {
                     deleteFacePoints(discardedFaces[i], face);
                 }
-                LOG.debug("  result: {}", face.toString());
                 return true;
             }
             currentEdge = currentEdge.next;
@@ -996,7 +967,6 @@ public class QuickHull3D
     {
         deleteFacePoints(face, null);
         face.state = Face.State.DELETED;
-        LOG.debug("  visiting face {}", face.toString());
         HalfEdge edge;
         if (edge0 == null)
         {
@@ -1021,7 +991,6 @@ public class QuickHull3D
                 else
                 {
                     horizon.add(edge);
-                    LOG.debug("  adding horizon edge {}", edge.getVertexString());
                 }
             }
             edge = edge.getNext();
@@ -1046,7 +1015,6 @@ public class QuickHull3D
         for (HalfEdge horizonEdge : horizon)
         {
             HalfEdge sideEdge = addAdjoiningFace(eyeVertex, horizonEdge);
-            LOG.debug("new face: {}", sideEdge.face.toString());
             if (prevSideEdge != null)
             {
                 sideEdge.next.setOpposite(prevSideEdge);
@@ -1090,9 +1058,6 @@ public class QuickHull3D
     {
         horizon.clear();
         unclaimed.clear();
-
-        LOG.debug("Adding point: {}", eyeVertex.index);
-        LOG.debug(" which is {} above face {}", eyeVertex.face.distanceToPlane(eyeVertex.point), eyeVertex.face.toString());
 
         removePointFromFace(eyeVertex, eyeVertex.face);
         calculateHorizon(eyeVertex.point, null, eyeVertex.face, horizon);
@@ -1196,7 +1161,7 @@ public class QuickHull3D
             {
                 if (ps != null)
                 {
-                    ps.println("Redundant vertex " + he.head().index + " in face " + face.toString());
+                    ps.println("Redundant vertex " + he.head().index + " in face " + face);
                 }
                 return false;
             }
@@ -1264,7 +1229,7 @@ public class QuickHull3D
                     {
                         if (ps != null)
                         {
-                            ps.println("Point " + i + " " + dist + " above face " + face.toString());
+                            ps.println("Point " + i + " " + dist + " above face " + face);
                         }
                         return false;
                     }

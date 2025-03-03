@@ -31,7 +31,7 @@ package com.github.quickhull3d;
 
 import org.joml.Vector3d;
 import org.joml.Vector3f;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Random;
 

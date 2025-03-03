@@ -32,7 +32,7 @@ package com.github.quickhull3d;
 import java.util.Random;
 
 import org.joml.Vector3d;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Testing class for QuickHull3D. Running the command
