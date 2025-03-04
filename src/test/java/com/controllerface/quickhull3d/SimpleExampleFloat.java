@@ -1,4 +1,4 @@
-package com.github.quickhull3d;
+package com.controllerface.quickhull3d;
 
 /*
  * #%L
@@ -8,13 +8,13 @@ package com.github.quickhull3d;
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * 
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -29,58 +29,50 @@ package com.github.quickhull3d;
  * #L%
  */
 
-import org.joml.Vector3d;
+import org.joml.Vector3f;
 
 /**
- * Represents vertices of the hull, as well as the points from which it is
- * formed.
- *
- * @author John E. Lloyd, Fall 2004
+ * Simple example usage of QuickHull3D. Run as the command
+ * 
+ * <pre>
+ *   java com.github.quickhull3d.SimpleExample
+ * </pre>
  */
-final class Vertex
+public class SimpleExampleFloat
 {
-    /**
-     * Spatial point associated with this vertex.
-     */
-    final Vector3d point;
 
     /**
-     * Back index into an array.
+     * Run for a simple demonstration of QuickHull3D.
      */
-    int index;
+    public static void main(String[] args) {
+        // x y z coordinates of 6 points
+        Vector3f[] points = new Vector3f[]{
+            new Vector3f(0.0f, 0.0f, 0.0f),
+            new Vector3f(1.0f, 0.5f, 0.0f),
+            new Vector3f(2.0f, 0.0f, 0.0f),
+            new Vector3f(0.5f, 0.5f, 0.5f),
+            new Vector3f(0.0f, 0.0f, 2.0f),
+            new Vector3f(0.1f, 0.2f, 0.3f),
+            new Vector3f(0.0f, 2.0f, 0.0f),
+        };
 
-    /**
-     * List forward link.
-     */
-    Vertex prev;
+        QuickHull3D hull = new QuickHull3D();
+        hull.build(points);
 
-    /**
-     * List backward link.
-     */
-    Vertex next;
+        System.out.println("Vertices:");
+        Vector3f[] vertices = hull.getFloatVertices();
+        for (int i = 0; i < vertices.length; i++) {
+            Vector3f pnt = vertices[i];
+            System.out.println(pnt.x + " " + pnt.y + " " + pnt.z);
+        }
 
-    /**
-     * Current face that this vertex is outside of.
-     */
-    Face face;
-
-    /**
-     * Constructs a vertex and sets its coordinates to 0.
-     */
-    public Vertex()
-    {
-        point = new Vector3d();
-    }
-
-    @Override
-    public String toString()
-    {
-        return "Vertex{" +
-            "pnt=" + point +
-            ", index=" + index +
-            ", prev=" + prev +
-            ", next=" + next +
-            ", face=" + face +
-            '}';
+        System.out.println("Faces:");
+        int[][] faceIndices = hull.getFaces();
+        for (int i = 0; i < vertices.length; i++) {
+            for (int k = 0; k < faceIndices[i].length; k++) {
+                System.out.print(faceIndices[i][k] + " ");
+            }
+            System.out.println("");
+        }
     }
 }

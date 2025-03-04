@@ -1,4 +1,4 @@
-package com.github.quickhull3d;
+package com.controllerface.quickhull3d;
 
 /*
  * #%L
@@ -8,13 +8,13 @@ package com.github.quickhull3d;
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -29,50 +29,42 @@ package com.github.quickhull3d;
  * #L%
  */
 
-import org.joml.Vector3f;
-
 /**
- * Simple example usage of QuickHull3D. Run as the command
- * 
- * <pre>
- *   java com.github.quickhull3d.SimpleExample
- * </pre>
+ * Maintains a single-linked list of faces for use by QuickHull3D
  */
-public class SimpleExampleFloat
+final class FaceList
 {
+    private Face head;
+
+    private Face tail;
 
     /**
-     * Run for a simple demonstration of QuickHull3D.
+     * Clears this list.
      */
-    public static void main(String[] args) {
-        // x y z coordinates of 6 points
-        Vector3f[] points = new Vector3f[]{
-            new Vector3f(0.0f, 0.0f, 0.0f),
-            new Vector3f(1.0f, 0.5f, 0.0f),
-            new Vector3f(2.0f, 0.0f, 0.0f),
-            new Vector3f(0.5f, 0.5f, 0.5f),
-            new Vector3f(0.0f, 0.0f, 2.0f),
-            new Vector3f(0.1f, 0.2f, 0.3f),
-            new Vector3f(0.0f, 2.0f, 0.0f),
-        };
+    public void clear()
+    {
+        head = tail = null;
+    }
 
-        QuickHull3D hull = new QuickHull3D();
-        hull.build(points);
-
-        System.out.println("Vertices:");
-        Vector3f[] vertices = hull.getFloatVertices();
-        for (int i = 0; i < vertices.length; i++) {
-            Vector3f pnt = vertices[i];
-            System.out.println(pnt.x + " " + pnt.y + " " + pnt.z);
+    /**
+     * Adds a vertex to the end of this list.
+     */
+    public void add(Face vtx)
+    {
+        if (head == null)
+        {
+            head = vtx;
         }
-
-        System.out.println("Faces:");
-        int[][] faceIndices = hull.getFaces();
-        for (int i = 0; i < vertices.length; i++) {
-            for (int k = 0; k < faceIndices[i].length; k++) {
-                System.out.print(faceIndices[i][k] + " ");
-            }
-            System.out.println("");
+        else
+        {
+            tail.next = vtx;
         }
+        vtx.next = null;
+        tail = vtx;
+    }
+
+    public Face first()
+    {
+        return head;
     }
 }

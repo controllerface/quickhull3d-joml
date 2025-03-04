@@ -1,4 +1,4 @@
-package com.github.quickhull3d;
+package com.controllerface.quickhull3d;
 
 /*
  * #%L
@@ -29,7 +29,6 @@ package com.github.quickhull3d;
  * #L%
  */
 
-import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 

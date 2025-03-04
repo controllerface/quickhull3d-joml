@@ -1,4 +1,4 @@
-package com.github.quickhull3d;
+package com.controllerface.quickhull3d;
 
 /*
  * #%L
@@ -29,13 +29,58 @@ package com.github.quickhull3d;
  * #L%
  */
 
+import org.joml.Vector3d;
+
 /**
- * Exception thrown when QuickHull3D encounters an error when attempting to generate a convex hull.
+ * Represents vertices of the hull, as well as the points from which it is
+ * formed.
+ *
+ * @author John E. Lloyd, Fall 2004
  */
-public class HullGenerationException extends RuntimeException
+final class Vertex
 {
-    public HullGenerationException(String msg)
+    /**
+     * Spatial point associated with this vertex.
+     */
+    final Vector3d point;
+
+    /**
+     * Back index into an array.
+     */
+    int index;
+
+    /**
+     * List forward link.
+     */
+    Vertex prev;
+
+    /**
+     * List backward link.
+     */
+    Vertex next;
+
+    /**
+     * Current face that this vertex is outside of.
+     */
+    Face face;
+
+    /**
+     * Constructs a vertex and sets its coordinates to 0.
+     */
+    public Vertex()
     {
-        super(msg);
+        point = new Vector3d();
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Vertex{" +
+            "pnt=" + point +
+            ", index=" + index +
+            ", prev=" + prev +
+            ", next=" + next +
+            ", face=" + face +
+            '}';
     }
 }

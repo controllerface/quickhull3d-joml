@@ -1,4 +1,4 @@
-package com.github.quickhull3d;
+package com.controllerface.quickhull3d;
 
 /*
  * #%L
