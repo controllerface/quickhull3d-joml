@@ -198,7 +198,7 @@ final class Face
      */
     public double distanceToPlane(Vector3d p)
     {
-        return normal.x * p.x + normal.y * p.y + normal.z * p.z - planeOffset;
+        return Math.fma(normal.x, p.x, Math.fma(normal.y, p.y, Math.fma(normal.z, p.z, -planeOffset)));
     }
 
     public Vector3d getCentroid()
@@ -480,7 +480,7 @@ final class Face
 
     private double norm(Vector3d vector3d)
     {
-        return Math.sqrt(vector3d.x * vector3d.x + vector3d.y * vector3d.y + vector3d.z * vector3d.z);
+        return Math.sqrt(Math.fma(vector3d.x, vector3d.x, Math.fma(vector3d.y, vector3d.y, vector3d.z * vector3d.z)));
     }
 
     @Override

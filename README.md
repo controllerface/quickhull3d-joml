@@ -17,6 +17,7 @@ See the maven project site here: [quickhull3d](http://quickhull3d.github.io/quic
 
 - Migrated build system from Maven to Gradle
 - JDK version in use was bumped up to `23`
+- Removed logging dependencies and all logging calls
 - Several `assert`s were added to ensure program correctness for debugging purposes
 - Cases where mutually exclusive `int` values were used for state were replaced with `enum` classes
   - this communicates intent more clearly and removes ambiguity about whether a value is a bitfield or not
@@ -38,7 +39,21 @@ See the maven project site here: [quickhull3d](http://quickhull3d.github.io/quic
   - Unused functions and fields were removed, as well as commented out code
   - Several `protected` fields and methods were made `private` or package-private where they did not need to be exposed, as there did not seem to be any use case for sub-classing
     - Classes were also made final to communicate this intent explicitly
-  - Several logging calls were parameterized instead of using concatenation
-    - Unnecessary calls to `LOG.isDebugEnabled()` were removed as a result
 - My personal code-style settings were applied to the project
   - _( sorry, not sorry :-) )_ 
+
+### Benchmarks
+
+To be clear, my motivation for making this fork was not to improve the speed of the existing algorithm, I simply wanted a good convex hull generator that worked with the JOML library vector types. That said, I had some free time and decided to benchmark this for against the existing one, just to see if there was any difference and if anything, to make sure I hadn;t somehow made it worse. I was happy to find that there is apparently a modest throughput improvement, at least on the two test systems I have. Test with he "original" suffix use the original implementation, and any marked "new" use this one. I added a benchmark for testing `float` based vectors, which don't exist in the original code, but I was curious how much time the float/double conversion process would cost, since I personally plan to utilize that feature. 
+
+Here's the JMH results from my main development system.  
+
+| Benchmark                       | Mode  | Cnt | Score      | Error    | Units |
+|---------------------------------|-------|-----|------------|----------|-------|
+| ModelCompare.testModelNew       | thrpt | 5   | 2467.032   | 12.671   | ops/s |
+| ModelCompare.testModelNewFloat  | thrpt | 5   | 2306.844   | 15.808   | ops/s |
+| ModelCompare.testModelOriginal  | thrpt | 5   | 2150.820   | 11.373   | ops/s |
+| SimpleCompare.testBasicNew      | thrpt | 5   | 108636.035 | 8725.861 | ops/s |
+| SimpleCompare.testBasicOriginal | thrpt | 5   | 99209.492  | 1168.861 | ops/s |
+
+The tests are in [src/jmh/java](src/jmh/java). The "simple" test is derived from the pre-existing uint test from the original repo. The "model" test uses raw model data from a test model that I have used in hobby project, it contains 7765 vertices, and has just shy of 10,000 triangles, so it's a fairly modestly sized model, but sufficiently large enough to represent something at least a little more real-world than the unit test. 
