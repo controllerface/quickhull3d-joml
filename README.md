@@ -44,16 +44,16 @@ See the maven project site here: [quickhull3d](http://quickhull3d.github.io/quic
 
 ### Benchmarks
 
-To be clear, my motivation for making this fork was not to improve the speed of the existing algorithm, I simply wanted a good convex hull generator that worked with the JOML library vector types. That said, I had some free time and decided to benchmark this for against the existing one, just to see if there was any difference and if anything, to make sure I hadn;t somehow made it worse. I was happy to find that there is apparently a modest throughput improvement, at least on the two test systems I have. Test with he "original" suffix use the original implementation, and any marked "new" use this one. I added a benchmark for testing `float` based vectors, which don't exist in the original code, but I was curious how much time the float/double conversion process would cost, since I personally plan to utilize that feature. 
+To be clear, my motivation for making this fork was not to improve the speed of the existing algorithm, I simply wanted a good convex hull generator that worked with the JOML library vector types. That said, I had some free time and decided to benchmark this for against the existing one, just to see if there was any difference and if anything, to make sure I hadn;t somehow made it worse. I was happy to find that there is apparently a modest throughput improvement, at least on the two test systems I have. Test with he "original" suffix use the original implementation, and any marked "new" use this one. I added a benchmark for testing `float` based vectors, which don't exist in the original code, but I was curious how much time the float/double conversion process would cost, since I personally plan to utilize that feature. As expected, there is some overhead associated with the conversion. There might be some room to improve it, but generally speaking I don't think it's a high priority.
 
 Here's the JMH results from my main development system.  
 
 | Benchmark                       | Mode  | Cnt | Score      | Error    | Units |
 |---------------------------------|-------|-----|------------|----------|-------|
-| ModelCompare.testModelNew       | thrpt | 5   | 2467.032   | 12.671   | ops/s |
-| ModelCompare.testModelNewFloat  | thrpt | 5   | 2306.844   | 15.808   | ops/s |
-| ModelCompare.testModelOriginal  | thrpt | 5   | 2150.820   | 11.373   | ops/s |
-| SimpleCompare.testBasicNew      | thrpt | 5   | 108636.035 | 8725.861 | ops/s |
-| SimpleCompare.testBasicOriginal | thrpt | 5   | 99209.492  | 1168.861 | ops/s |
+| ModelCompare.testModelNew       | thrpt | 5   | 3333.331   | 48.301   | ops/s |
+| ModelCompare.testModelNewFloat  | thrpt | 5   | 3078.964   | 60.039   | ops/s |
+| ModelCompare.testModelOriginal  | thrpt | 5   | 3225.163   | 50.996   | ops/s |
+| SimpleCompare.testBasicNew      | thrpt | 5   | 191579.241 | 2526.303 | ops/s |
+| SimpleCompare.testBasicOriginal | thrpt | 5   | 163885.735 | 2849.159 | ops/s |
 
 The tests are in [src/jmh/java](src/jmh/java). The "simple" test is derived from the pre-existing uint test from the original repo. The "model" test uses raw model data from a test model that I have used in hobby project, it contains 7765 vertices, and has just shy of 10,000 triangles, so it's a fairly modestly sized model, but sufficiently large enough to represent something at least a little more real-world than the unit test. 
