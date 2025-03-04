@@ -15,36 +15,39 @@ See the maven project site here: [quickhull3d](http://quickhull3d.github.io/quic
 
 ### Changes made in this fork
 
-- Migrated build system from Maven to Gradle
-- JDK version in use was bumped up to `23`
+- The internal classes `Point3d` and `Vector3d` were removed and replaced with the `Vector3d` implementation found in the [JOML](https://github.com/JOML-CI/JOML) library
+  - Methods that were implemented on the original vector class were made into helper functions
+- Build system was changed from Maven to Gradle
+- JDK version in was bumped up to `23`
 - Removed logging dependencies and all logging calls
 - Several `assert`s were added to ensure program correctness for debugging purposes
-- Cases where mutually exclusive `int` values were used for state were replaced with `enum` classes
+- Cases where mutually exclusive `int` values were used for state, `enum` classes were used instead
   - this communicates intent more clearly and removes ambiguity about whether a value is a bitfield or not
-- Several overly terse variable names have been changed
+- Several terse variable names have been changed
   - For example, `vtx` -> `vertex`, `nump` -> `pointCount`, etc.
-- In cases where optimization was trivial, for example using `Math.fma()` for a potential performance improvement, code was optimized. 
-- The internal classes `Point3d` and `Vector3d` were removed and replaced with the `Vector3d` implementation found in the [JOML](https://github.com/JOML-CI/JOML) library. This required some minor changes to the ordering of certain method calls within the logic, primarily `add()`, `sub()`, and `mul()` (called "scale" in the original code) were refactored to maintain correct operation
-  - Some methods that were implemented on the original vector class were made into helper functions
-- Support was added for `float[]` and `Vector3f` data types in addition to the existing double[] and `Vector3d` support
-  - Float based versions of the existing unit tests were made that assert correct operation with `float` based data
+- In cases where doing so was trivial, `Math.fma()` was used for a potential performance improvement
+- Support was added for `float[]` data types in addition to the existing `double[`] support
+  - Float based versions of the existing unit tests were made to assert correct operation with `float` based data
 - Test that relied on the c implementation of `qhull` was removed
   - Several methods were only implemented to support this feature and were removed as well
 - Directories that did not contain source code or tests were removed (`/site`, `/checkstyle`, and `/eclipse`)
-- Using IntelliJ, most common code change suggestions were applied, mainly to bring the code forward to more modern Java idioms, for example:
+- Many common IDE code quality suggestions were applied, mainly to bring the code forward to more modern Java idioms, for example:
   - Various typos were fixed 
   - Where applicable, non-indexed (for-each) loops were used instead of indexed for loops
-  - Where applicable, if/else blocks or other patterns that are less explicit or more verbose, were replaced with modern switch expressions. 
+  - Where applicable, if/else blocks or other patterns were replaced with switch expressions. 
   - Instances of `StringBuffer` were replaced with `StringBuilder`
-  - Unused functions and fields were removed, as well as commented out code
-  - Several `protected` fields and methods were made `private` or package-private where they did not need to be exposed, as there did not seem to be any use case for sub-classing
+  - Unused functions and fields were removed, as were blocks commented out code
+  - Several `protected` fields and methods were made `private` or package-private 
+    - There did not seem to be any use case for sub-classing
     - Classes were also made final to communicate this intent explicitly
-- My personal code-style settings were applied to the project
+- My personal brace preferences were applied to the project
   - _( sorry, not sorry :-) )_ 
 
 ### Benchmarks
 
-To be clear, my motivation for making this fork was not to improve the speed of the existing algorithm, I simply wanted a good convex hull generator that worked with the JOML library vector types. That said, I had some free time and decided to benchmark this for against the existing one, just to see if there was any difference and if anything, to make sure I hadn;t somehow made it worse. I was happy to find that there is apparently a modest throughput improvement, at least on the two test systems I have. Test with he "original" suffix use the original implementation, and any marked "new" use this one. I added a benchmark for testing `float` based vectors, which don't exist in the original code, but I was curious how much time the float/double conversion process would cost, since I personally plan to utilize that feature. As expected, there is some overhead associated with the conversion. There might be some room to improve it, but generally speaking I don't think it's a high priority.
+To be clear, my motivation for making this fork was not to improve the speed of the existing algorithm, I simply wanted a good convex hull generator that worked with the JOML library vector types. That said, I did want to make sure performance was not worse. There does appear to be a very modest throughput improvement, at least on the two test systems I have, likely due to the use of `Math.fma()` calls both within the JOML classes, but also in the places I was able to use them in the implementation itself. 
+
+Benchmarks with he "Original" suffix use the original implementation, and any marked "New" use this forked one. I added a benchmark for testing `float` based vectors, which don't exist in the original code, but I was curious how much time the float/double conversion process would cost, since I personally plan to utilize that feature. As expected, there is some overhead associated with the conversion. There might be some room to improve it, but generally speaking I don't think it's a high priority.
 
 Here's the JMH results from my main development system.  
 
