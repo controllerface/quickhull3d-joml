@@ -13,6 +13,57 @@ See the maven project site here: [quickhull3d](http://quickhull3d.github.io/quic
 
 ---
 
+### Basic usage
+
+The `QuickHull3D` class is very simple to use, you just have to provide an array of points as input, and then retrieve another array of points as output. Generally you have two options, either passing the source points in a constructor, or by calling one the `build()` methods with the source points. Here's an example of typical usage. 
+
+```java
+// get your points from somewhere, like a loaded model
+Vector3f[] model_verts = get_points();
+
+// when passing points to constructor the `build()` method is called automatically
+var hull = new QuickHull3D(model_verts);
+
+// in most cases, you will want the hull to be triangulated for rendering or collision checks
+hull.triangulate();
+
+// get the resulting vertices and indices
+Vector3f[] hull_verts = hull.getFloatVertices();
+int[][] hull_indices = hull.getFaces();
+```
+
+For convenience, there's several constructors that can be used for raw `float` or `double` data, as well as the JOML types `Vector3f` and `Vector3d`:
+
+```java
+// raw float[] data
+public QuickHull3D(float[] coords)
+
+// raw double[] data
+public QuickHull3D(double[] coords)
+  
+// JOML Vector3f data
+public QuickHull3D(Vector3f[] coords)
+
+// JOML Vector3d data
+public QuickHull3D(Vector3d[] coords)
+```
+
+You can also create an empty `QuickHull3D` object, and call one of the `build()` overloads later, if you aren't sure which type of data you're going to have until you're about to use it:
+
+```java
+// raw float[] data
+public void build(double[] coords)
+  
+// raw double[] data
+public void build(float[] coords)
+  
+// JOML Vector3f data
+public void build(Vector3d[] points)
+  
+// JOML Vector3d data
+public void build(Vector3f[] points)
+```
+
 ### Changes made in this fork
 
 - The internal classes `Point3d` and `Vector3d` were removed and replaced with the `Vector3d` implementation found in the [JOML](https://github.com/JOML-CI/JOML) library
